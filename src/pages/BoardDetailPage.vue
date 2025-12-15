@@ -2,7 +2,12 @@
   <div class="detail-container">
     <h1>{{ post.title }}</h1>
 
-    <div class="image-placeholder"></div>
+    <img 
+        v-if="post.saveFile" 
+        :src="`http://localhost:8080/upload/${post.saveFile}`" 
+        class="detail-img" 
+    />
+    <div v-else class="image-placeholder"></div>
 
     <div class="rating">⭐ {{ post.rating }} / 5.0</div>
 
@@ -11,34 +16,90 @@
     </p>
 
     <div class="actions">
-      <button>❤️ 좋아요 {{ post.likes }}</button>
-      <button>💬 댓글 {{ post.comments }}</button>
+      <button>❤️ 좋아요 {{ post.likeCount }}</button>
+      <button>💬 조회수 {{ post.hit }}</button>
     </div>
+
+    <div class="owner-actions" v-if="userInfo && userInfo.userId === post.userId">
+        <button class="edit-btn" @click="goModify">수정</button>
+        <button class="delete-btn" @click="deleteArticle">삭제</button>
+    </div>
+
   </div>
 </template>
 
 <script setup>
-import { ref } from "vue";
-import { useRoute } from "vue-router";
+import { ref, onMounted } from "vue";
+import { useRoute, useRouter } from "vue-router";
+import axios from "axios";
 
 const route = useRoute();
+const router = useRouter();
 const postId = route.params.id;
 
-// 📌 임시 데이터 — 나중엔 API로 가져올 예정
-const post = ref({
-  id: postId,
-  title: "경복궁",
-  rating: 4.5,
-  content: "야경이 정말 예쁜데 낮보다 분위기가 좋아요! 다음에는 가족들이랑 다시 올 예정입니다 😁",
-  likes: 12,
-  comments: 3,
+// 게시글 데이터
+const post = ref({});
+// 로그인한 유저 정보 (로그인 시 sessionStorage에 'userInfo'라는 키로 저장했다고 가정)
+const userInfo = ref(null);
+
+onMounted(async () => {
+    // 1. 유저 정보 로드
+    const storedUser = sessionStorage.getItem("userInfo");
+    if (storedUser) {
+        userInfo.value = JSON.parse(storedUser);
+    }
+
+    // 2. 게시글 상세 조회
+    try {
+        const { data } = await axios.get(`http://localhost:8080/api/board/${postId}`);
+        post.value = data;
+    } catch (error) {
+        console.error("상세 조회 실패", error);
+        alert("글을 불러오지 못했습니다.");
+        router.push("/board");
+    }
 });
+
+// 삭제 기능
+const deleteArticle = async () => {
+    if (!confirm("정말 삭제하시겠습니까?")) return;
+
+    try {
+        await axios.delete(`http://localhost:8080/api/board/${postId}`, {
+            withCredentials: true // 세션 쿠키 전송 (백엔드 본인확인용)
+        });
+        alert("삭제되었습니다.");
+        router.push("/board");
+    } catch (error) {
+        console.error(error);
+        if (error.response && error.response.status === 403) {
+            alert("삭제 권한이 없습니다."); // 백엔드에서 막았을 때
+        } else {
+            alert("삭제 중 오류가 발생했습니다.");
+        }
+    }
+};
+
+// 수정 페이지 이동
+const goModify = () => {
+    // 수정 페이지 라우터가 있다면 이동 (ex: /board/modify/1)
+    // 혹은 기존 Write 페이지를 재활용할 수도 있음
+    router.push(`/board/modify/${postId}`); 
+};
 </script>
 
 <style scoped>
 .detail-container {
   max-width: 850px;
   margin: 48px auto;
+}
+
+.detail-img {
+    width: 100%;
+    max-height: 500px;
+    object-fit: contain;
+    border-radius: 12px;
+    margin: 22px 0;
 }
 
 .image-placeholder {
@@ -69,4 +130,26 @@ const post = ref({
   cursor: pointer;
   font-size: 17px;
 }
+
+/* 수정 삭제 버튼 스타일 */
+.owner-actions {
+    margin-top: 30px;
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    border-top: 1px solid #eee;
+    padding-top: 20px;
+}
+
+.edit-btn, .delete-btn {
+    padding: 8px 16px;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    font-size: 14px;
+    color: white;
+}
+
+.edit-btn { background-color: #4CAF50; }
+.delete-btn { background-color: #f44336; }
 </style>

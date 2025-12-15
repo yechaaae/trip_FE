@@ -1,28 +1,34 @@
 <template>
   <div class="board-container">
-  <h1>리뷰 게시판</h1>
-  <button class="write-btn" @click="goWrite">✍️ 리뷰 작성하기</button>
+    <h1>리뷰 게시판</h1>
+    <button class="write-btn" @click="goWrite">✍️ 리뷰 작성하기</button>
 
     <div class="review-feed">
       <div
         class="review-card"
-        v-for="n in 6"
-        :key="n"
-        @click="goDetail(n)"          
+        v-for="article in articles"
+        :key="article.boardId"
+        @click="goDetail(article.boardId)"
       >
-        <h2 class="place">경복궁</h2>
+        <h2 class="place">{{ article.title }}</h2>
 
-        <div class="photo"></div>
+        <img 
+            v-if="article.saveFile" 
+            :src="`http://localhost:8080/upload/${article.saveFile}`" 
+            class="photo-img" 
+            alt="리뷰 사진" 
+        />
+        <div v-else class="photo-placeholder"></div>
 
-        <div class="rating">⭐ 4.5 / 5.0</div>
+        <div class="rating">⭐ {{ article.rating }} / 5.0</div>
 
         <p class="content">
-          야경이 정말 예쁜데 낮보다 분위기가 좋아요! 다음에는 가족들이랑 다시 올 예정입니다 😊
+          {{ article.content }}
         </p>
 
-        <div class="actions" @click.stop>   <!-- 🔥 좋아요/댓글 클릭 시 상세 진입 방지 -->
-          <button class="like-btn">❤️ 12</button>
-          <button class="comment-btn">💬 3</button>
+        <div class="actions" @click.stop>
+          <button class="like-btn">❤️ {{ article.likeCount }}</button>
+          <button class="comment-btn">💬 {{ article.hit }}</button> 
         </div>
       </div>
     </div>
@@ -30,9 +36,26 @@
 </template>
 
 <script setup>
+import { ref, onMounted } from "vue";
 import { useRouter } from "vue-router";
+import axios from "axios";
 
 const router = useRouter();
+const articles = ref([]); // 서버에서 받아올 리스트
+
+// 목록 가져오기
+const getArticles = async () => {
+    try {
+        const { data } = await axios.get("http://localhost:8080/api/board");
+        articles.value = data;
+    } catch (error) {
+        console.error("목록 조회 실패", error);
+    }
+};
+
+onMounted(() => {
+    getArticles();
+});
 
 const goWrite = () => router.push("/board/write");
 
@@ -42,6 +65,7 @@ const goDetail = (id) => {
 </script>
 
 <style scoped lang="scss">
+/* 기존 스타일 유지 + 이미지 태그 스타일 추가 */
 .board-container {
   max-width: 760px;
   margin: 0 auto;
@@ -65,12 +89,12 @@ const goDetail = (id) => {
   background: #fff;
   padding: 22px 24px;
   box-shadow: 0 4px 10px rgba(0,0,0,0.06);
-  cursor: pointer;                         /* 🔥 카드 전체 클릭 가능 */
+  cursor: pointer;
   transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 
 .review-card:hover {
-  transform: translateY(-3px);             /* 🔥 hover 부드러운 인터랙션 */
+  transform: translateY(-3px);
   box-shadow: 0 6px 14px rgba(0, 0, 0, 0.09);
 }
 
@@ -79,7 +103,16 @@ const goDetail = (id) => {
   margin-bottom: 14px;
 }
 
-.photo {
+/* 이미지 스타일 수정 */
+.photo-img {
+  width: 100%;
+  height: 260px;
+  object-fit: cover; /* 이미지가 찌그러지지 않게 */
+  border-radius: 10px;
+  margin-bottom: 16px;
+}
+
+.photo-placeholder {
   width: 100%;
   height: 260px;
   border-radius: 10px;
@@ -96,6 +129,13 @@ const goDetail = (id) => {
   font-size: 15px;
   line-height: 1.55;
   margin-bottom: 18px;
+  
+  /* 내용이 길면 말줄임표 처리 (선택사항) */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
 }
 
 .actions {
@@ -116,17 +156,9 @@ const goDetail = (id) => {
 .like-btn {
   background: #ffe2e5;
 }
-.like-btn:hover {
-  background: #ffc8cf;
-}
-
 .comment-btn {
   background: #eaf1ff;
 }
-.comment-btn:hover {
-  background: #d4e3ff;
-}
-
 .write-btn {
   margin: 0 auto 26px;
   display: block;
@@ -137,10 +169,5 @@ const goDetail = (id) => {
   color: white;
   font-size: 16px;
   cursor: pointer;
-  transition: 0.2s;
 }
-.write-btn:hover {
-  background: #0052d8;
-}
-
 </style>
