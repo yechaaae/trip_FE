@@ -1,35 +1,33 @@
 <template>
-  <div class="detail-page">
+  <div class="detail-page" v-if="place">
 
-    <!-- ⭐ 상단 정보 -->
+    <!-- 🔹 HEADER -->
     <section class="header-section">
       <h1>{{ place.title }}</h1>
-      <p class="subtitle">{{ place.addr1 }}</p>
 
       <div class="meta">
-        <span class="rating">⭐ 4.6</span>
-        <span class="count">123 리뷰</span>
+        <span>⭐ 4.6</span>
+        <span>리뷰 123</span>
       </div>
     </section>
 
-    <!-- ⭐ 이미지 슬라이더 -->
-    <section class="slider-section">
+    <!-- 🔹 IMAGE -->
+    <section class="image-section" v-if="images.length">
       <Swiper
+        :modules="[Navigation, Pagination]"
         :slides-per-view="1"
         :space-between="20"
-        :pagination="{ clickable: true }"
         :navigation="true"
-        class="place-swiper"
+        :pagination="{ clickable: true }"
       >
         <SwiperSlide v-for="(img, idx) in images" :key="idx">
-          <img :src="img.originimgurl || img.smallimageurl || place.firstimage" />
+          <img :src="img.originimgurl || img.smallimageurl" />
         </SwiperSlide>
       </Swiper>
-
       <div class="img-count">{{ images.length }}장</div>
     </section>
 
-    <!-- ⭐ 액션바 -->
+    <!-- 🔹 ACTION BAR -->
     <section class="action-bar">
       <div class="action-item" @click="toggleSave">
         <i :class="saved ? 'fa-solid fa-heart saved' : 'fa-regular fa-heart'"></i>
@@ -47,78 +45,163 @@
       </div>
     </section>
 
-    <!-- ⭐ 상세 소개 -->
-    <section class="content-section">
+    <!-- 🔹 BASIC INFO -->
+    <section class="info-section">
+      <h2>기본 정보</h2>
+
+      <div class="info-item">
+        <span class="label">
+          <i class="fa-solid fa-location-dot"></i>
+          주소
+        </span>
+        <p class="value">{{ place.addr1 }}</p>
+      </div>
+
+      <div class="info-item" v-if="place.tel">
+        <span class="label">
+          <i class="fa-solid fa-phone"></i>
+          전화
+        </span>
+        <p class="value">{{ place.tel }}</p>
+      </div>
+
+      <div class="info-item" v-if="place.homepage">
+        <span class="label">
+          <i class="fa-solid fa-globe"></i>
+          홈페이지
+        </span>
+        <p class="value" v-html="place.homepage"></p>
+      </div>
+    </section>
+
+
+    <!-- 🔹 MAP -->
+    <section class="map-section" v-if="place.mapx && place.mapy">
+      <h2>위치</h2>
+      <div id="map" class="map"></div>
+    </section>
+
+    <!-- 🔹 OVERVIEW -->
+    <section class="overview-section" v-if="place.overview">
       <h2>상세 소개</h2>
-      <p>{{ place.overview }}</p>
+      <p v-html="cleanOverview"></p>
     </section>
 
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from "vue";
+import { ref, computed, onMounted, nextTick } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { Swiper, SwiperSlide } from "swiper/vue";
+import { Navigation, Pagination } from "swiper/modules";
+
 import "swiper/css";
 import "swiper/css/navigation";
 import "swiper/css/pagination";
 
 import { getAttractionDetail, getAttractionImage } from "@/api/attraction";
 
+/* 🔑 ENV */
+const KAKAO_MAP_KEY = import.meta.env.VITE_KAKAO_MAP_KEY;
+
 const route = useRoute();
 const router = useRouter();
-
 const contentId = route.params.id;
 
-const place = ref({});
+const place = ref(null);
 const images = ref([]);
-
 const saved = ref(false);
 
-// 🔥 상세 정보 조회
+/* -------------------
+   API
+------------------- */
 const fetchDetail = async () => {
   const { data } = await getAttractionDetail(contentId);
   const item = data?.response?.body?.items?.item;
   place.value = Array.isArray(item) ? item[0] : item;
 };
 
-// 🔥 이미지 조회
 const fetchImages = async () => {
-  try {
-    const { data } = await getAttractionImage(contentId);
+  const { data } = await getAttractionImage(contentId);
+  const items = data?.response?.body?.items?.item;
+  images.value = items ? (Array.isArray(items) ? items : [items]) : [];
 
-    const items = data?.response?.body?.items?.item;
-    images.value = items ? (Array.isArray(items) ? items : [items]) : [];
-
-    // 이미지가 아예 없으면 상세 이미지 1개라도 넣기
-    if (images.value.length === 0 && place.value.firstimage) {
-      images.value.push({ originimgurl: place.value.firstimage });
-    }
-  } catch (e) {
-    console.error("이미지 조회 실패", e);
+  if (images.value.length === 0 && place.value?.firstimage) {
+    images.value.push({ originimgurl: place.value.firstimage });
   }
 };
 
-// 저장하기
-const toggleSave = () => {
-  saved.value = !saved.value;
+/* -------------------
+   KAKAO MAP
+------------------- */
+const loadKakaoMap = () => {
+  return new Promise((resolve) => {
+    if (window.kakao && window.kakao.maps) {
+      resolve();
+      return;
+    }
+
+    const script = document.createElement("script");
+    script.src = `//dapi.kakao.com/v2/maps/sdk.js?autoload=false&appkey=${KAKAO_MAP_KEY}`;
+    script.onload = () => window.kakao.maps.load(resolve);
+    document.head.appendChild(script);
+  });
 };
 
-// 리뷰쓰기
-const goWriteReview = () => {
+const initMap = async () => {
+  await loadKakaoMap();
+  await nextTick();
+
+  const container = document.getElementById("map");
+
+  const position = new window.kakao.maps.LatLng(
+    Number(place.value.mapy),
+    Number(place.value.mapx)
+  );
+
+  const map = new window.kakao.maps.Map(container, {
+    center: position,
+    level: 3,
+  });
+
+  new window.kakao.maps.Marker({
+    map,
+    position,
+  });
+};
+
+/* -------------------
+   COMPUTED
+------------------- */
+const cleanOverview = computed(() => {
+  if (!place.value?.overview) return "";
+  return place.value.overview.replace(/<br\s*\/?>/gi, "\n");
+});
+
+/* -------------------
+   ACTIONS
+------------------- */
+const toggleSave = () => (saved.value = !saved.value);
+const goWriteReview = () =>
   router.push(`/board/write?placeId=${contentId}`);
+const sharePlace = async () => {
+  await navigator.clipboard.writeText(window.location.href);
+  alert("링크가 복사되었습니다");
 };
 
-// 공유하기
-const sharePlace = () => {
-  navigator.clipboard.writeText(window.location.href);
-  alert("링크가 클립보드에 복사되었습니다!");
-};
-
+/* -------------------
+   MOUNT
+------------------- */
 onMounted(async () => {
   await fetchDetail();
   await fetchImages();
+
+  window.scrollTo(0, 0);
+
+  if (place.value?.mapx && place.value?.mapy) {
+    initMap();
+  }
 });
 </script>
 
@@ -129,60 +212,113 @@ onMounted(async () => {
   padding: 30px 20px;
 }
 
-/* -------------------
+/* ===================
    HEADER
-------------------- */
+=================== */
 .header-section {
   margin-bottom: 24px;
 
   h1 {
     font-size: 32px;
     font-weight: 800;
-  }
-
-  .subtitle {
-    font-size: 17px;
-    color: #666;
-    margin-top: 6px;
+    line-height: 1.3;
   }
 
   .meta {
     margin-top: 10px;
     display: flex;
-    gap: 12px;
+    gap: 14px;
     font-size: 15px;
-    color: #444;
+    color: #555;
   }
 }
 
-/* -------------------
-   SLIDER
-------------------- */
-.slider-section {
+/* ===================
+   IMAGE SLIDER
+=================== */
+.image-section {
   position: relative;
 
+  /* 🔑 기본 화살표 색 (비-hover) */
+  --swiper-navigation-color: rgb(140, 140, 140);
+
+  /* 이미지 기본 */
   img {
     width: 100%;
-    height: 420px;
+    aspect-ratio: 16 / 9;
+    height: auto;
     object-fit: cover;
     border-radius: 14px;
   }
 
+  /* 좌우 네비게이션 버튼 */
+  .swiper-button-prev,
+  .swiper-button-next {
+    width: 46px;
+    height: 46px;
+    border-radius: 50%;
+
+    background: rgba(0, 0, 0, 0.35);
+    backdrop-filter: blur(6px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    opacity: 0.9;
+    transition:
+      background 0.25s ease,
+      box-shadow 0.25s ease;
+  }
+
+  /* 🔥 hover 시만 색 변화 */
+  .swiper-button-prev:hover,
+  .swiper-button-next:hover {
+    --swiper-navigation-color: rgb(90, 90, 90);
+    background: rgba(0, 0, 0, 0.55);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
+  }
+
+  .swiper-button-prev::after,
+  .swiper-button-next::after {
+    font-size: 18px;
+    font-weight: 700;
+  }
+
+  /* 페이지네이션 */
+  .swiper-pagination-bullet {
+    background: rgba(255, 255, 255, 0.6);
+    opacity: 1;
+  }
+
+  .swiper-pagination-bullet-active {
+    background: white;
+    width: 18px;
+    border-radius: 6px;
+  }
+
+  /* 이미지 개수 배지 */
   .img-count {
     position: absolute;
     bottom: 14px;
     right: 16px;
-    background: rgba(0, 0, 0, 0.55);
+
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(6px);
     color: white;
-    padding: 5px 12px;
-    border-radius: 12px;
-    font-size: 14px;
+
+    padding: 6px 14px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 500;
+    z-index: 5;
   }
 }
 
-/* -------------------
+/* ===================
    ACTION BAR
-------------------- */
+=================== */
 .action-bar {
   display: flex;
   justify-content: space-around;
@@ -196,9 +332,9 @@ onMounted(async () => {
 
     i {
       font-size: 22px;
-      margin-bottom: 3px;
+      margin-bottom: 4px;
       color: #444;
-      transition: 0.2s;
+      transition: color 0.2s ease;
     }
 
     i.saved {
@@ -218,11 +354,65 @@ onMounted(async () => {
   }
 }
 
-/* -------------------
-   CONTENT
-------------------- */
-.content-section {
-  margin-top: 32px;
+/* ===================
+   INFO (ICON STYLE)
+=================== */
+.info-section {
+  margin-top: 36px;
+
+  h2 {
+    font-size: 24px;
+    font-weight: 700;
+    margin-bottom: 22px;
+  }
+
+  .info-item {
+    margin-bottom: 20px;
+  }
+
+  .label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #777;
+    margin-bottom: 6px;
+  }
+
+  .value {
+    font-size: 16px;
+    color: #222;
+    line-height: 1.6;
+    word-break: keep-all;
+  }
+}
+
+/* ===================
+   MAP
+=================== */
+.map-section {
+  margin-top: 36px;
+
+  h2 {
+    font-size: 24px;
+    font-weight: 700;
+    margin-bottom: 12px;
+  }
+
+  .map {
+    width: 100%;
+    height: 360px;
+    border-radius: 14px;
+    overflow: hidden;
+  }
+}
+
+/* ===================
+   OVERVIEW
+=================== */
+.overview-section {
+  margin-top: 36px;
 
   h2 {
     font-size: 24px;
