@@ -4,8 +4,8 @@
     <section class="header-section">
       <h1>{{ place.title }}</h1>
       <div class="meta">
-        <span>⭐ 4.6</span>
-        <span>리뷰 123</span>
+        <span>⭐ {{ reviewStats.avgRating.toFixed(1) }}</span>
+        <span>리뷰 {{ reviewStats.reviewCount }}</span>
       </div>
     </section>
 
@@ -84,6 +84,70 @@
 </template>
 
 <script setup>
+import { ref, computed, onMounted, nextTick } from "vue";
+import { useRoute, useRouter } from "vue-router";
+import { Swiper, SwiperSlide } from "swiper/vue";
+import { Navigation, Pagination } from "swiper/modules";
+import { getReviewStats } from "@/api/board";
+
+import "swiper/css";
+import "swiper/css/navigation";
+import "swiper/css/pagination";
+
+import { getAttractionDetail, getAttractionImage } from "@/api/attraction";
+
+const KAKAO_MAP_KEY = import.meta.env.VITE_KAKAO_MAP_KEY;
+
+const route = useRoute();
+const router = useRouter();
+const contentId = route.params.id;
+
+const place = ref(null);
+const images = ref([]);
+const saved = ref(false);
+
+
+
+const reviewStats = ref({
+  avgRating: 0,
+  reviewCount: 0,
+});
+
+const fetchReviewStats = async () => {
+  try {
+    const { data } = await getReviewStats(contentId);
+    reviewStats.value = data;
+  } catch (e) {
+    console.error("리뷰 통계 조회 실패", e);
+  }
+};
+
+
+/* API */
+const fetchDetail = async () => {
+  const { data } = await getAttractionDetail(contentId);
+  const item = data?.response?.body?.items?.item;
+  place.value = Array.isArray(item) ? item[0] : item;
+};
+
+const fetchImages = async () => {
+  const { data } = await getAttractionImage(contentId);
+  const items = data?.response?.body?.items?.item;
+  images.value = items ? (Array.isArray(items) ? items : [items]) : [];
+
+  if (!images.value.length && place.value?.firstimage) {
+    images.value.push({ originimgurl: place.value.firstimage });
+  }
+};
+
+/* KAKAO MAP */
+const loadKakaoMap = () =>
+  new Promise((resolve) => {
+    if (window.kakao?.maps) return resolve();
+    const script = document.createElement("script");
+    script.src = `//dapi.kakao.com/v2/maps/sdk.js?autoload=false&appkey=${KAKAO_MAP_KEY}`;
+    script.onload = () => window.kakao.maps.load(resolve);
+    document.head.appendChild(script);
   import { ref, computed, onMounted, nextTick } from "vue";
   import { useRoute, useRouter } from "vue-router";
   import axios from "axios"; // ★ axios 추가
@@ -192,6 +256,33 @@
     if (!place.value?.overview) return "";
     return place.value.overview.replace(/<br\s*\/?>/gi, "\n");
   });
+
+  new kakao.maps.Marker({ map, position });
+};
+
+const cleanOverview = computed(() =>
+  place.value?.overview
+    ? place.value.overview.replace(/<br\s*\/?>/gi, "\n")
+    : ""
+);
+
+/* ACTIONS */
+const toggleSave = () => (saved.value = !saved.value);
+const goWriteReview = () =>
+  router.push(`/board/write?placeId=${contentId}`);
+const sharePlace = async () => {
+  await navigator.clipboard.writeText(window.location.href);
+  alert("링크가 복사되었습니다");
+};
+
+onMounted(async () => {
+  await fetchDetail();
+  await fetchImages();
+  await fetchReviewStats();
+  window.scrollTo(0, 0);
+  if (place.value?.mapx && place.value?.mapy) initMap();
+});
+</script>
   
   /* -------------------
      ACTIONS
