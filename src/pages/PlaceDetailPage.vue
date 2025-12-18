@@ -214,7 +214,6 @@ onMounted(async () => {
 
 /* ===================
    HEADER
-=================== */
 .header-section {
   margin-bottom: 24px;
 
@@ -235,7 +234,6 @@ onMounted(async () => {
 
 /* ===================
    IMAGE SLIDER
-=================== */
 .image-section {
   position: relative;
 
@@ -318,7 +316,6 @@ onMounted(async () => {
 
 /* ===================
    ACTION BAR
-=================== */
 .action-bar {
   display: flex;
   justify-content: space-around;
@@ -356,7 +353,6 @@ onMounted(async () => {
 
 /* ===================
    INFO (ICON STYLE)
-=================== */
 .info-section {
   margin-top: 36px;
 
@@ -390,7 +386,6 @@ onMounted(async () => {
 
 /* ===================
    MAP
-=================== */
 .map-section {
   margin-top: 36px;
 
@@ -410,7 +405,6 @@ onMounted(async () => {
 
 /* ===================
    OVERVIEW
-=================== */
 .overview-section {
   margin-top: 36px;
 

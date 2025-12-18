@@ -19,7 +19,7 @@
       <button>❤️ 좋아요 {{ post.likeCount }}</button>
       <button>💬 조회수 {{ post.hit }}</button>
     </div>
-
+   
     <div class="owner-actions" v-if="userInfo && userInfo.userId === post.userId">
         <button class="edit-btn" @click="goModify">수정</button>
         <button class="delete-btn" @click="deleteArticle">삭제</button>
@@ -43,20 +43,24 @@ const post = ref({});
 const userInfo = ref(null);
 
 onMounted(async () => {
-    // 1. 유저 정보 로드
+    // 1. 세션 스토리지에서 유저 정보 가져오기
     const storedUser = sessionStorage.getItem("userInfo");
     if (storedUser) {
-        userInfo.value = JSON.parse(storedUser);
+        try {
+            userInfo.value = JSON.parse(storedUser);
+            console.log("로그인 정보:", userInfo.value);
+        } catch (e) {
+            console.error("세션 정보 파싱 실패", e);
+        }
     }
 
     // 2. 게시글 상세 조회
     try {
         const { data } = await axios.get(`http://localhost:8080/api/board/${postId}`);
         post.value = data;
+        console.log("게시글 정보:", post.value); // 작성자 ID 확인용
     } catch (error) {
         console.error("상세 조회 실패", error);
-        alert("글을 불러오지 못했습니다.");
-        router.push("/board");
     }
 });
 

@@ -64,7 +64,6 @@ const toggleFilter = (type) => {
 <style scoped lang="scss">
 /* ===================
    PAGE LAYOUT
-=================== */
 .home-page {
   width: 100%;
   height: calc(100vh - 60px); // 네비바 높이 제외
@@ -84,7 +83,6 @@ const toggleFilter = (type) => {
 
 /* ===================
    MAP
-=================== */
 .map-section {
   flex: 7;
   display: flex;
@@ -101,7 +99,6 @@ const toggleFilter = (type) => {
 
 /* ===================
    BADGE CARD
-=================== */
 .badge-card {
   flex: 3;
   background: #fff;
@@ -152,7 +149,6 @@ const toggleFilter = (type) => {
 
 /* ===================
    FILTER BAR
-=================== */
 .filter-bar {
   position: absolute;
   top: 20px;

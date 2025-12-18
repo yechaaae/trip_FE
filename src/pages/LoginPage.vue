@@ -83,7 +83,7 @@ const handleLogin = async () => {
       } else {
         localStorage.removeItem("savedUserId");
       }
-
+      sessionStorage.setItem("userInfo", JSON.stringify(response.data));
       // 스토어 저장 및 이동
       memberStore.setLoginUser(response.data);
       alert("로그인 성공!");

@@ -8,7 +8,6 @@ import * as d3 from "d3";
 
 /* =====================
    PROPS
-===================== */
 const props = defineProps({
   filters: {
     type: Object,
@@ -20,7 +19,6 @@ const mapContainer = ref(null);
 
 /* =====================
    PIN DATA (임시)
-===================== */
 const pins = [
   {
     name: "서울",
@@ -135,7 +133,6 @@ onMounted(async () => {
 
   /* =====================
  TOOLTIP
-===================== */
   const tooltip = d3
     .select(mapContainer.value)
     .append("div")
@@ -170,7 +167,6 @@ onMounted(async () => {
 
 /* =====================
    FILTER LOGIC
-===================== */
 const applyFilters = () => {
   if (!markerGroup) return;
 
@@ -202,7 +198,6 @@ watch(
 <style scoped>
 /* =====================
    MAP WRAPPER
-===================== */
 .map-wrapper {
   width: 100%;
   height: 100%;
@@ -223,14 +218,12 @@ svg {
 
 /* =====================
    MAP REGION
-===================== */
 :deep(.region) {
   transition: fill 0.2s ease, stroke-width 0.2s ease;
 }
 
 /* =====================
    PIN BASE
-===================== */
 :deep(.pin) {
   fill: #ff3b30;
   /* 기본 핀 */
@@ -275,7 +268,6 @@ svg {
 
 /* =====================
    PIN LABEL
-===================== */
 :deep(.pin-label) {
   pointer-events: none;
   font-size: 13px;
@@ -285,7 +277,6 @@ svg {
 
 /* =====================
    TOOLTIP
-===================== */
 :deep(.map-tooltip) {
   position: absolute;
   pointer-events: none;
