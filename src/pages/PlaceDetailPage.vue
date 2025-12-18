@@ -206,7 +206,10 @@
           contentId: Number(contentId),
           title: place.value.title,
           addr1: place.value.addr1,
-          firstImage: place.value.firstimage || place.value.firstImage // API 버전에 따라 키값이 다를 수 있음
+          firstImage: place.value.firstimage || place.value.firstImage, // API 버전에 따라 키값이 다를 수 있음
+          latitude: Number(place.value.mapy), 
+          longitude: Number(place.value.mapx)
+        
         };
   
         await api.post("/api/mypage/bookmark", payload);

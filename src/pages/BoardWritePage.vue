@@ -214,7 +214,11 @@ const submitReview = async () => {
     content: content.value,
     type: pageType.value,
     rating: isReview.value ? rating.value : 0,
-    contentId: isReview.value ? selectedAttraction.value.contentId : null
+    contentId: isReview.value ? selectedAttraction.value.contentId : null,
+    latitude: (isReview.value && selectedAttraction.value) ? Number(selectedAttraction.value.mapy) : null,
+    longitude: (isReview.value && selectedAttraction.value) ? Number(selectedAttraction.value.mapx) : null,
+    attractionTitle: (isReview.value && selectedAttraction.value) ? selectedAttraction.value.title : null,
+    attractionImg: (isReview.value && selectedAttraction.value) ? (selectedAttraction.value.firstimage || selectedAttraction.value.firstImage) : null
   };
 
   try {
