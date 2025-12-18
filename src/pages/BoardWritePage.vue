@@ -183,14 +183,26 @@ const selectAttraction = (item) => {
 
 //  작성 및 수정 요청 처리
 const submitReview = async () => {
-    if (isReview.value && !selectedAttraction.value) {
-        alert("관광지를 선택해주세요!");
-        return;
-    }
-    if (!content.value) {
-        alert("내용을 입력해주세요.");
-        return;
-    }
+  if (isReview.value && !selectedAttraction.value) {
+      alert("관광지를 선택해주세요!"); return;
+  }
+  if (!content.value) {
+      alert("내용을 입력해주세요."); return;
+  }
+
+  // 데이터 객체 생성
+  const boardDto = {
+    boardId: isEditMode.value ? boardId : 0, // 수정 시 ID 필수
+    title: title.value,
+    content: content.value,
+    type: pageType.value,
+    rating: isReview.value ? rating.value : 0,
+    contentId: isReview.value ? selectedAttraction.value.contentId : null,
+    latitude: (isReview.value && selectedAttraction.value) ? Number(selectedAttraction.value.mapy) : null,
+    longitude: (isReview.value && selectedAttraction.value) ? Number(selectedAttraction.value.mapx) : null,
+    attractionTitle: (isReview.value && selectedAttraction.value) ? selectedAttraction.value.title : null,
+    attractionImg: (isReview.value && selectedAttraction.value) ? (selectedAttraction.value.firstimage || selectedAttraction.value.firstImage) : null
+  };
 
     // 1️⃣ boardDto에는 contentId 넣지 않음
     const boardDto = {

@@ -209,19 +209,75 @@ const loadKakaoMap = () =>
     script.onload = () => window.kakao.maps.load(resolve);
     document.head.appendChild(script);
   });
-
-const initMap = async () => {
-  await loadKakaoMap();
-  await nextTick();
-
-  const position = new kakao.maps.LatLng(
-    Number(place.value.mapy),
-    Number(place.value.mapx)
-  );
-
-  const map = new kakao.maps.Map(document.getElementById("map"), {
-    center: position,
-    level: 3,
+  
+  /* -------------------
+     ACTIONS
+  ------------------- */
+  // ★ [수정] DB 연동 저장/삭제 토글
+  const toggleSave = async () => {
+    if (!saved.value) {
+      // 1. 저장 (INSERT)
+      try {
+        // DTO 구조에 맞춰서 데이터 전송
+        const payload = {
+          contentId: Number(contentId),
+          title: place.value.title,
+          addr1: place.value.addr1,
+          firstImage: place.value.firstimage || place.value.firstImage, // API 버전에 따라 키값이 다를 수 있음
+          latitude: Number(place.value.mapy), 
+          longitude: Number(place.value.mapx)
+        
+        };
+  
+        await api.post("/api/mypage/bookmark", payload);
+        alert("관광지가 저장되었습니다. 📂");
+        
+        // 저장 후 ID 확인을 위해 상태 재조회
+        await checkSavedStatus();
+      } catch (error) {
+        if (error.response && error.response.status === 401) {
+          alert("로그인이 필요한 서비스입니다.");
+          router.push("/login");
+        } else {
+          alert("저장에 실패했습니다.");
+        }
+      }
+    } else {
+      // 2. 삭제 (DELETE)
+      if (!bookmarkId.value) return;
+  
+      if (!confirm("저장을 취소하시겠습니까?")) return;
+  
+      try {
+        await api.delete(`/api/mypage/bookmark/${bookmarkId.value}`);
+        saved.value = false;
+        bookmarkId.value = null;
+        alert("저장이 취소되었습니다.");
+      } catch (error) {
+        alert("삭제 중 오류가 발생했습니다.");
+      }
+    }
+  };
+  
+  const goWriteReview = () => router.push(`/board/write?placeId=${contentId}`);
+  const sharePlace = async () => {
+    await navigator.clipboard.writeText(window.location.href);
+    alert("링크가 복사되었습니다");
+  };
+  
+  /* -------------------
+     MOUNT
+  ------------------- */
+  onMounted(async () => {
+    await fetchDetail();
+    await fetchImages();
+    await checkSavedStatus(); // ★ 페이지 들어오면 저장 여부 확인
+  
+    window.scrollTo(0, 0);
+  
+    if (place.value?.mapx && place.value?.mapy) {
+      initMap();
+    }
   });
 
   new kakao.maps.Marker({ map, position });
