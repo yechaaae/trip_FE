@@ -3,17 +3,47 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from "vue";
+import { ref, onMounted, watch } from "vue";
 import * as d3 from "d3";
+
+/* =====================
+   PROPS
+const props = defineProps({
+  filters: {
+    type: Object,
+    required: true,
+  },
+});
 
 const mapContainer = ref(null);
 
-// 임시 핀 데이터
+/* =====================
+   PIN DATA (임시)
 const pins = [
-  { name: "서울", lat: 37.5665, lng: 126.978 },
-  { name: "부산", lat: 35.1796, lng: 129.0756 },
-  { name: "제주", lat: 33.4996, lng: 126.5312 },
+  {
+    name: "서울",
+    lat: 37.5665,
+    lng: 126.978,
+    isSaved: true,
+    isReviewed: false,
+  },
+  {
+    name: "부산",
+    lat: 35.1796,
+    lng: 129.0756,
+    isSaved: false,
+    isReviewed: true,
+  },
+  {
+    name: "제주",
+    lat: 33.4996,
+    lng: 126.5312,
+    isSaved: true,
+    isReviewed: true,
+  },
 ];
+
+let markerGroup = null; // 🔥 핀 그룹 저장
 
 onMounted(async () => {
   const res = await fetch("/src/assets/geo/HangJeongDong_ver20250401.geojson");
@@ -27,7 +57,7 @@ onMounted(async () => {
     .append("svg")
     .attr("width", width)
     .attr("height", height)
-    .style("shape-rendering", "geometricPrecision"); // 성능 최적화 + 선 보정
+    .style("shape-rendering", "geometricPrecision");
 
   const projection = d3
     .geoMercator()
@@ -37,10 +67,11 @@ onMounted(async () => {
 
   const path = d3.geoPath().projection(projection);
 
-  // 지도 전체 그룹
   const g = svg.append("g");
 
-  // 🔥 지도 Path
+  /* =====================
+     MAP PATH
+  ===================== */
   g.selectAll("path")
     .data(geojson.features)
     .enter()
@@ -52,10 +83,12 @@ onMounted(async () => {
     .attr("opacity", 0.9)
     .attr("class", "region");
 
-  // 🔥 마커 그룹 (지도와 함께 움직이게)
-  const markerGroup = g.append("g").attr("class", "markers");
+  /* =====================
+     MARKER GROUP
+  ===================== */
+  markerGroup = g.append("g").attr("class", "markers");
 
-  // 핀 생성
+  /* 🔴 circle */
   markerGroup
     .selectAll("circle")
     .data(pins)
@@ -64,9 +97,15 @@ onMounted(async () => {
     .attr("cx", (d) => projection([d.lng, d.lat])[0])
     .attr("cy", (d) => projection([d.lng, d.lat])[1])
     .attr("r", 6)
-    .attr("fill", "#ff3b30")
-    .attr("class", "pin");
+    .attr("class", (d) => {
+      if (d.isSaved && d.isReviewed) return "pin saved reviewed";
+      if (d.isSaved) return "pin saved";
+      if (d.isReviewed) return "pin reviewed";
+      return "pin";
+    });
 
+
+  /* 🔤 label */
   markerGroup
     .selectAll("text")
     .data(pins)
@@ -80,63 +119,180 @@ onMounted(async () => {
     .attr("class", "pin-label")
     .text((d) => d.name);
 
-  // 🔥 Hover 최적화 (path마다 이벤트 X → svg 한 번만)
-  svg.on("mousemove", (event) => {
-    const target = event.target;
-    if (target.tagName === "path") {
-      d3.select(target)
-        .attr("fill", "#cddcff")
-        .attr("stroke-width", 1.1);
-    }
-  });
-
-  svg.on("mouseout", (event) => {
-    const target = event.target;
-    if (target.tagName === "path") {
-      d3.select(target)
-        .attr("fill", "#e4ebf5")
-        .attr("stroke-width", 0.7);
-    }
-  });
-
-  // 🔥 Zoom + Drag
-  const zoom = d3.zoom()
+  /* =====================
+     ZOOM
+  ===================== */
+  const zoom = d3
+    .zoom()
     .scaleExtent([1, 8])
     .on("zoom", (event) => {
       g.attr("transform", event.transform);
     });
 
   svg.call(zoom);
+
+  /* =====================
+ TOOLTIP
+  const tooltip = d3
+    .select(mapContainer.value)
+    .append("div")
+    .attr("class", "map-tooltip")
+    .style("opacity", 0);
+
+  /* 핀 hover 이벤트 */
+  markerGroup.selectAll("circle")
+    .on("mouseover", function (event, d) {
+      tooltip
+        .style("opacity", 1)
+        .html(d.name);
+    })
+    .on("mousemove", function (event) {
+      tooltip
+        .style("left", event.offsetX + 12 + "px")
+        .style("top", event.offsetY - 8 + "px");
+    })
+    .on("mouseout", function () {
+      tooltip
+        .style("opacity", 0);
+    });
+
+
+
+
+
+
+  /* 🔥 최초 필터 적용 */
+  applyFilters();
 });
+
+/* =====================
+   FILTER LOGIC
+const applyFilters = () => {
+  if (!markerGroup) return;
+
+  const { saved, reviewed } = props.filters;
+
+  markerGroup.selectAll("circle, text")
+    .style("display", (d) => {
+      if (!saved && !reviewed) return "block";
+
+      return (
+        (saved && d.isSaved) ||
+        (reviewed && d.isReviewed)
+      )
+        ? "block"
+        : "none";
+    });
+};
+
+/* 🔥 필터 변화 감지 */
+watch(
+  () => props.filters,
+  () => {
+    applyFilters();
+  },
+  { deep: true }
+);
 </script>
 
 <style scoped>
+/* =====================
+   MAP WRAPPER
 .map-wrapper {
   width: 100%;
   height: 100%;
   display: flex;
   justify-content: center;
-  align-items: flex-start; /* 상단에 붙기 */
+  align-items: flex-start;
   overflow: auto;
   background: #fafafa;
+  position: relative;
 }
 
-/* 지도 비율 유지 */
+/* SVG 기본 */
 svg {
   width: 90%;
   height: auto;
   overflow: visible;
 }
 
-.region {
-  transition: 0.2s;
+/* =====================
+   MAP REGION
+:deep(.region) {
+  transition: fill 0.2s ease, stroke-width 0.2s ease;
 }
 
-.pin {
+/* =====================
+   PIN BASE
+:deep(.pin) {
+  fill: #ff3b30;
+  /* 기본 핀 */
   cursor: pointer;
+
+  /* SVG transform 필수 옵션 */
+  transform-box: fill-box;
+  transform-origin: center;
+
+  transition:
+    transform 0.2s ease,
+    fill 0.2s ease;
 }
 
-.pin-label {
+/* ❤️ 저장한 관광지 */
+:deep(.pin.saved) {
+  fill: #ff6b81;
+}
+
+/* ⭐ 리뷰한 관광지 (마름모) */
+:deep(.pin.reviewed) {
+  fill: #f6c343;
+  transform: rotate(45deg);
+}
+
+/* ❤️ + ⭐ 저장 + 리뷰 */
+:deep(.pin.saved.reviewed) {
+  fill: #ff922b;
+  stroke: #333;
+  stroke-width: 1.2;
+}
+
+/* hover 시 강조 */
+:deep(.pin:hover) {
+  transform: scale(1.4);
+}
+
+/* 리뷰 핀 hover 시 회전 유지 */
+:deep(.pin.reviewed:hover) {
+  transform: rotate(45deg) scale(1.4);
+}
+
+/* =====================
+   PIN LABEL
+:deep(.pin-label) {
   pointer-events: none;
+  font-size: 13px;
+  font-weight: 600;
+  fill: #333;
+}
+
+/* =====================
+   TOOLTIP
+:deep(.map-tooltip) {
+  position: absolute;
+  pointer-events: none;
+  z-index: 100;
+
+  background: #fff;
+  color: #222;
+  padding: 6px 10px;
+  border-radius: 8px;
+
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+  opacity: 0;
+  transition: opacity 0.15s ease;
 }
 </style>

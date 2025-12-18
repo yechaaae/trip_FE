@@ -14,8 +14,20 @@ const get = (url, params = {}) => {
 // ================================================================
 // 1) 지역별 관광지 목록 조회
 // ================================================================
-export const getAttractionList = (areaCode, contentTypeId) => {
-  return get("/attraction/list", { areaCode, contentTypeId });
+export const getAttractionList = (
+  areaCode,
+  contentTypeId,
+  pageNo = 1,
+  numOfRows = 20
+) => {
+  return api.get("/attraction/list", {
+    params: {
+      areaCode,
+      contentTypeId,
+      pageNo,
+      numOfRows,
+    },
+  });
 };
 
 // ================================================================

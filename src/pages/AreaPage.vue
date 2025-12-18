@@ -70,6 +70,29 @@
         </div>
       </div>
 
+      <!-- 🔹 페이지네이션 -->
+      <div class="pagination" v-if="totalCount > numOfRows">
+        <button
+          :disabled="pageNo === 1"
+          @click="pageNo--, fetchPlaces()"
+        >
+          이전
+        </button>
+
+        <span>
+          {{ pageNo }} /
+          {{ Math.ceil(totalCount / numOfRows) }}
+        </span>
+
+        <button
+          :disabled="pageNo >= Math.ceil(totalCount / numOfRows)"
+          @click="pageNo++, fetchPlaces()"
+        >
+          다음
+        </button>
+      </div>
+
+
     </section>
 
   </div>
@@ -86,6 +109,9 @@ const router = useRouter();
 // ⭐ 상태값
 const selectedArea = ref(areas[0]);
 const places = ref([]);
+const pageNo = ref(1);
+const totalCount = ref(0);
+const numOfRows = 20;
 
 // ⭐ 카테고리 목록
 const categories = [
@@ -104,11 +130,16 @@ const fetchPlaces = async () => {
   try {
     const { data } = await getAttractionList(
       selectedArea.value.code,
-      selectedCategory.value.typeId
+      selectedCategory.value.typeId,
+      pageNo.value,
+      numOfRows
     );
 
-    const items = data?.response?.body?.items?.item;
+    const body = data?.response?.body;
+    const items = body?.items?.item;
+
     places.value = Array.isArray(items) ? items : [];
+    totalCount.value = body?.totalCount || 0;
 
   } catch (error) {
     console.error("❌ 관광지 API 호출 실패:", error);
@@ -116,21 +147,24 @@ const fetchPlaces = async () => {
   }
 };
 
+
 // ⭐ 지역 선택 시
 const selectArea = (area) => {
   selectedArea.value = area;
+  pageNo.value = 1;
   fetchPlaces();
 };
 
 // ⭐ 카테고리 드롭다운
 const dropdownOpen = ref(false);
 const toggleDropdown = () => (dropdownOpen.value = !dropdownOpen.value);
+
 const selectCategory = (c) => {
   selectedCategory.value = c;
   dropdownOpen.value = false;
+  pageNo.value = 1;
   fetchPlaces();
 };
-
 // ⭐ 아이콘 이미지 fallback
 const imgFallback = (e) => {
   e.target.src = "/tmpimg.png";
@@ -328,4 +362,31 @@ onMounted(() => {
     color: #555;
   }
 }
+
+.pagination {
+  margin-top: 30px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 16px;
+
+  button {
+    padding: 8px 14px;
+    border-radius: 8px;
+    border: 1px solid #cfd6e6;
+    background: #fff;
+    cursor: pointer;
+
+    &:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+  }
+
+  span {
+    font-size: 16px;
+    font-weight: 600;
+  }
+}
+
 </style>
