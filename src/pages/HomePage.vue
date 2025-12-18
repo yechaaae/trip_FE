@@ -1,12 +1,10 @@
 <template>
   <div class="home-page">
     <div class="home-container">
-
       <!-- 지도 영역 -->
       <section class="map-section">
         <div class="map-wrapper">
-
-          <!-- 🔹 FILTER BAR -->
+          <!-- FILTER BAR -->
           <div class="filter-bar">
             <button
               class="filter-btn"
@@ -27,12 +25,12 @@
             </button>
           </div>
 
-          <!-- 🔹 filters 전달 -->
+          <!-- MAP -->
           <MapView :filters="filters" />
         </div>
       </section>
 
-      <!-- 뱃지 카드 -->
+      <!-- BADGE CARD -->
       <aside class="badge-card">
         <h2>🏅 나의 뱃지함</h2>
 
@@ -62,7 +60,9 @@ const toggleFilter = (type) => {
 </script>
 
 <style scoped lang="scss">
-//   PAGE LAYOUT
+/* ===================
+   PAGE LAYOUT
+=================== */
 .home-page {
   width: 100%;
   height: calc(100vh - 60px); // 네비바 높이 제외
@@ -80,7 +80,9 @@ const toggleFilter = (type) => {
   height: 100%;
 }
 
-//   MAP
+/* ===================
+   MAP
+=================== */
 .map-section {
   flex: 7;
   display: flex;
@@ -91,11 +93,12 @@ const toggleFilter = (type) => {
   height: 100%;
   border-radius: 16px;
   overflow: hidden;
-
-  position: relative; 
+  position: relative; /* filter bar 기준 */
 }
 
-//   BADGE CARD
+/* ===================
+   BADGE CARD
+=================== */
 .badge-card {
   flex: 3;
   background: #fff;
@@ -144,8 +147,9 @@ const toggleFilter = (type) => {
   }
 }
 
-
-//   FILTER BAR
+/* ===================
+   FILTER BAR
+=================== */
 .filter-bar {
   position: absolute;
   top: 20px;
@@ -185,20 +189,18 @@ const toggleFilter = (type) => {
   font-size: 14px;
 }
 
-/* 선택되지 않은 상태 hover */
+/* hover (비활성) */
 .filter-btn:hover {
   background: #f1f3f5;
 }
 
-/* 🔥 선택된 상태 */
+/* 활성 상태 */
 .filter-btn.active {
   background: #e7edff;
   color: #3b5bdb;
 }
 
-/* 아이콘 색도 같이 */
 .filter-btn.active i {
   color: #3b5bdb;
 }
-
 </style>
