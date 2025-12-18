@@ -29,6 +29,12 @@
 
         <label>이메일</label>
         <input type="email" v-model="form.email" placeholder="이메일 입력" />
+
+        <label>자기소개</label>
+        <textarea 
+          v-model="form.introduction" 
+          placeholder="여행을 좋아하는 개발자입니다. 자기소개를 입력해주세요."
+        ></textarea>
       </div>
     </div>
 
@@ -48,23 +54,22 @@ import { useMemberStore } from "@/stores/memberStore";
 const router = useRouter();
 const memberStore = useMemberStore();
 
-// axios 설정
 const api = axios.create({
   baseURL: "http://localhost:8080",
   withCredentials: true,
 });
 
-// 폼 데이터
+// 폼 데이터 (introduction 추가)
 const form = ref({
   nickname: "",
   birthDate: "",
   email: "",
+  introduction: "", // [New]
 });
 
-// 이미지 관련 변수
-const fileInput = ref(null);      // input 태그 참조
-const selectedFile = ref(null);   // 실제 선택된 파일 객체
-const previewImage = ref("");     // 화면에 보여줄 이미지 URL
+const fileInput = ref(null);
+const selectedFile = ref(null);
+const previewImage = ref("");
 
 // 1. 프로필 정보 불러오기
 const fetchCurrentProfile = async () => {
@@ -75,10 +80,9 @@ const fetchCurrentProfile = async () => {
     form.value.nickname = userInfo.nickName;
     form.value.birthDate = userInfo.birthDate || "";
     form.value.email = userInfo.email;
+    form.value.introduction = userInfo.introduction || ""; // [New] DB 값 바인딩
 
-    // 기존 프로필 이미지가 있다면 보여주기 (없으면 기본 회색)
     if (userInfo.profileImg) {
-      // 백엔드 URL + DB에 저장된 경로
       previewImage.value = `http://localhost:8080${userInfo.profileImg}`;
     }
 
@@ -94,17 +98,14 @@ onMounted(() => {
   fetchCurrentProfile();
 });
 
-// 2. 파일 선택 창 열기
 const triggerFileUpload = () => {
   fileInput.value.click();
 };
 
-// 3. 파일 선택 시 미리보기 처리
 const handleFileChange = (event) => {
   const file = event.target.files[0];
   if (file) {
     selectedFile.value = file;
-    // 브라우저 내에서 미리보기 URL 생성
     previewImage.value = URL.createObjectURL(file);
   }
 };
@@ -116,44 +117,39 @@ const cancel = () => {
 // 4. 저장 (FormData 사용)
 const saveProfile = async () => {
   try {
-    // ★ FormData 객체 생성 (파일 전송 필수)
     const formData = new FormData();
 
-    // JSON 데이터를 Blob으로 변환하여 추가 (백엔드 @RequestPart("userDto")와 매칭)
+    // [New] introduction 포함
     const userDto = {
       nickName: form.value.nickname,
       birthDate: form.value.birthDate,
       email: form.value.email,
+      introduction: form.value.introduction, 
     };
     
-    // JSON 타입을 명시해서 보냄
     formData.append(
       "userDto", 
       new Blob([JSON.stringify(userDto)], { type: "application/json" })
     );
 
-    // 파일이 선택되었다면 추가 (백엔드 @RequestPart("file")과 매칭)
     if (selectedFile.value) {
       formData.append("file", selectedFile.value);
     }
 
-    // 전송 (Content-Type은 axios가 자동으로 multipart/form-data로 설정함)
     const response = await api.put("/user", formData, {
-        headers: {
-            "Content-Type": "multipart/form-data",
-        },
+        headers: { "Content-Type": "multipart/form-data" },
     });
 
-    // 5. 스토어 정보 갱신 (서버에서 받은 최신 UserDto 사용)
-    const updatedUser = response.data; // 백엔드에서 리턴해준 최신 정보
+    // 5. 스토어 정보 갱신
+    const updatedUser = response.data;
     
-    // DTO 필드명 매핑 (필요 시)
     const userToSave = {
         userId: updatedUser.userId,
         nickName: updatedUser.nickName,
         email: updatedUser.email,
         birthDate: updatedUser.birthDate,
-        profileImg: updatedUser.profileImg // 프로필 이미지 경로 추가
+        profileImg: updatedUser.profileImg,
+        introduction: updatedUser.introduction // [New] 스토어에도 업데이트
     };
 
     memberStore.setLoginUser(userToSave);
@@ -169,11 +165,10 @@ const saveProfile = async () => {
 </script>
 
 <style scoped lang="scss">
-/* 기존 스타일 그대로 유지 */
-/* avatar-preview 스타일만 확인: background-size가 cover여야 이미지가 꽉 찹니다. */
 .edit-container { padding: 32px; max-width: 800px; margin: 0 auto; }
 .form-wrapper { display: flex; gap: 32px; margin-top: 30px; }
 .avatar-wrapper { display: flex; flex-direction: column; align-items: center; width: 220px; }
+
 .avatar-preview { 
   width: 160px; 
   height: 160px; 
@@ -182,13 +177,49 @@ const saveProfile = async () => {
   margin-bottom: 14px; 
   background-size: cover; 
   background-position: center;
-  border: 1px solid #ddd; /* 테두리 살짝 추가 */
+  border: 1px solid #ddd;
 }
-/* ... 나머지 스타일 ... */
+
 .inputs { flex: 1; display: flex; flex-direction: column; gap: 16px; }
+
 label { font-weight: 600; font-size: 14px; }
-input { padding: 10px; border: 1px solid #ddd; border-radius: 6px; }
+
+/* input과 textarea 스타일 통일 */
+input, textarea { 
+  padding: 10px; 
+  border: 1px solid #ddd; 
+  border-radius: 6px; 
+  font-family: inherit; /* 폰트 상속 */
+  font-size: 14px;      /* 폰트 사이즈 통일 */
+}
+
+/* textarea 전용 스타일 */
+textarea {
+  resize: vertical; /* 세로로만 늘리기 가능 */
+  min-height: 100px; /* 기본 높이 설정 */
+  line-height: 1.5;
+}
+
+/* 포커스 효과 통일 */
+input:focus, textarea:focus {
+  outline: none;
+  border-color: #4b7bff;
+}
+
+.change-img-btn {
+  margin-top: 10px;
+  padding: 8px 16px;
+  background: white;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+}
+.change-img-btn:hover { background: #f9f9f9; }
+
 .actions { margin-top: 30px; display: flex; justify-content: flex-end; gap: 10px; }
 .save-btn { background: #4b7bff; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; }
+.save-btn:hover { background: #3a68eb; }
 .cancel-btn { background: #eee; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; }
+.cancel-btn:hover { background: #e0e0e0; }
 </style>
