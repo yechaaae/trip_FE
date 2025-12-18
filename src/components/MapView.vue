@@ -8,6 +8,7 @@ import * as d3 from "d3";
 
 /* =====================
    PROPS
+===================== */
 const props = defineProps({
   filters: {
     type: Object,
@@ -19,39 +20,54 @@ const mapContainer = ref(null);
 
 /* =====================
    PIN DATA (임시)
+===================== */
 const pins = [
-  {
-    name: "서울",
-    lat: 37.5665,
-    lng: 126.978,
-    isSaved: true,
-    isReviewed: false,
-  },
-  {
-    name: "부산",
-    lat: 35.1796,
-    lng: 129.0756,
-    isSaved: false,
-    isReviewed: true,
-  },
-  {
-    name: "제주",
-    lat: 33.4996,
-    lng: 126.5312,
-    isSaved: true,
-    isReviewed: true,
-  },
+  { name: "서울", lat: 37.5665, lng: 126.978, isSaved: true,  isReviewed: false },
+  { name: "부산", lat: 35.1796, lng: 129.0756, isSaved: false, isReviewed: true  },
+  { name: "제주", lat: 33.4996, lng: 126.5312, isSaved: true,  isReviewed: true  },
 ];
 
-let markerGroup = null; // 🔥 핀 그룹 저장
+let markerGroup = null; // 핀 그룹 저장
+
+/* =====================
+   FILTER LOGIC
+===================== */
+const applyFilters = () => {
+  if (!markerGroup) return;
+
+  const { saved, reviewed } = props.filters;
+
+  markerGroup
+    .selectAll("circle, text")
+    .style("display", (d) => {
+      if (!saved && !reviewed) return "block";
+
+      return (saved && d.isSaved) || (reviewed && d.isReviewed) ? "block" : "none";
+    });
+};
+
+/* =====================
+   WATCH FILTERS
+===================== */
+watch(
+  () => props.filters,
+  () => applyFilters(),
+  { deep: true }
+);
 
 onMounted(async () => {
+  /* =====================
+     LOAD GEOJSON
+  ===================== */
   const res = await fetch("/src/assets/geo/HangJeongDong_ver20250401.geojson");
   const geojson = await res.json();
 
   const width = mapContainer.value.clientWidth;
   const height = mapContainer.value.clientHeight;
 
+  /* =====================
+     SVG + PROJECTION
+  ===================== */
   const svg = d3
     .select(mapContainer.value)
     .append("svg")
@@ -88,7 +104,9 @@ onMounted(async () => {
   ===================== */
   markerGroup = g.append("g").attr("class", "markers");
 
-  /* 🔴 circle */
+  /* =====================
+     PINS (CIRCLE)
+  ===================== */
   markerGroup
     .selectAll("circle")
     .data(pins)
@@ -104,8 +122,9 @@ onMounted(async () => {
       return "pin";
     });
 
-
-  /* 🔤 label */
+  /* =====================
+     PINS (LABEL)
+  ===================== */
   markerGroup
     .selectAll("text")
     .data(pins)
@@ -113,14 +132,11 @@ onMounted(async () => {
     .append("text")
     .attr("x", (d) => projection([d.lng, d.lat])[0] + 10)
     .attr("y", (d) => projection([d.lng, d.lat])[1] - 5)
-    .attr("font-size", 13)
-    .attr("font-weight", 600)
-    .attr("fill", "#333")
     .attr("class", "pin-label")
     .text((d) => d.name);
 
   /* =====================
-     ZOOM
+     ZOOM + DRAG
   ===================== */
   const zoom = d3
     .zoom()
@@ -132,72 +148,39 @@ onMounted(async () => {
   svg.call(zoom);
 
   /* =====================
- TOOLTIP
+     TOOLTIP
+  ===================== */
   const tooltip = d3
     .select(mapContainer.value)
     .append("div")
     .attr("class", "map-tooltip")
     .style("opacity", 0);
 
-  /* 핀 hover 이벤트 */
-  markerGroup.selectAll("circle")
-    .on("mouseover", function (event, d) {
-      tooltip
-        .style("opacity", 1)
-        .html(d.name);
+  markerGroup
+    .selectAll("circle")
+    .on("mouseover", (event, d) => {
+      tooltip.style("opacity", 1).html(d.name);
     })
-    .on("mousemove", function (event) {
+    .on("mousemove", (event) => {
       tooltip
         .style("left", event.offsetX + 12 + "px")
         .style("top", event.offsetY - 8 + "px");
     })
-    .on("mouseout", function () {
-      tooltip
-        .style("opacity", 0);
+    .on("mouseout", () => {
+      tooltip.style("opacity", 0);
     });
 
-
-
-
-
-
-  /* 🔥 최초 필터 적용 */
+  /* =====================
+     INITIAL FILTER APPLY
+  ===================== */
   applyFilters();
 });
-
-/* =====================
-   FILTER LOGIC
-const applyFilters = () => {
-  if (!markerGroup) return;
-
-  const { saved, reviewed } = props.filters;
-
-  markerGroup.selectAll("circle, text")
-    .style("display", (d) => {
-      if (!saved && !reviewed) return "block";
-
-      return (
-        (saved && d.isSaved) ||
-        (reviewed && d.isReviewed)
-      )
-        ? "block"
-        : "none";
-    });
-};
-
-/* 🔥 필터 변화 감지 */
-watch(
-  () => props.filters,
-  () => {
-    applyFilters();
-  },
-  { deep: true }
-);
 </script>
 
 <style scoped>
 /* =====================
    MAP WRAPPER
+===================== */
 .map-wrapper {
   width: 100%;
   height: 100%;
@@ -206,10 +189,10 @@ watch(
   align-items: flex-start;
   overflow: auto;
   background: #fafafa;
-  position: relative;
+  position: relative; /* tooltip 기준점 */
 }
 
-/* SVG 기본 */
+/* SVG */
 svg {
   width: 90%;
   height: auto;
@@ -218,56 +201,54 @@ svg {
 
 /* =====================
    MAP REGION
+===================== */
 :deep(.region) {
   transition: fill 0.2s ease, stroke-width 0.2s ease;
 }
 
 /* =====================
    PIN BASE
+===================== */
 :deep(.pin) {
   fill: #ff3b30;
-  /* 기본 핀 */
   cursor: pointer;
 
-  /* SVG transform 필수 옵션 */
   transform-box: fill-box;
   transform-origin: center;
 
-  transition:
-    transform 0.2s ease,
-    fill 0.2s ease;
+  transition: transform 0.2s ease, fill 0.2s ease;
 }
 
-/* ❤️ 저장한 관광지 */
+/* ❤️ 저장 */
 :deep(.pin.saved) {
   fill: #ff6b81;
 }
 
-/* ⭐ 리뷰한 관광지 (마름모) */
+/* ⭐ 리뷰 (마름모) */
 :deep(.pin.reviewed) {
   fill: #f6c343;
   transform: rotate(45deg);
 }
 
-/* ❤️ + ⭐ 저장 + 리뷰 */
+/* ❤️ + ⭐ */
 :deep(.pin.saved.reviewed) {
   fill: #ff922b;
   stroke: #333;
   stroke-width: 1.2;
 }
 
-/* hover 시 강조 */
+/* hover */
 :deep(.pin:hover) {
   transform: scale(1.4);
 }
 
-/* 리뷰 핀 hover 시 회전 유지 */
 :deep(.pin.reviewed:hover) {
   transform: rotate(45deg) scale(1.4);
 }
 
 /* =====================
    PIN LABEL
+===================== */
 :deep(.pin-label) {
   pointer-events: none;
   font-size: 13px;
@@ -277,6 +258,7 @@ svg {
 
 /* =====================
    TOOLTIP
+===================== */
 :deep(.map-tooltip) {
   position: absolute;
   pointer-events: none;
