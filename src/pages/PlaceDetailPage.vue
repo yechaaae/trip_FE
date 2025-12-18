@@ -4,8 +4,8 @@
     <section class="header-section">
       <h1>{{ place.title }}</h1>
       <div class="meta">
-        <span>⭐ 4.6</span>
-        <span>리뷰 123</span>
+        <span>⭐ {{ reviewStats.avgRating.toFixed(1) }}</span>
+        <span>리뷰 {{ reviewStats.reviewCount }}</span>
       </div>
     </section>
 
@@ -88,6 +88,7 @@ import { ref, computed, onMounted, nextTick } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { Swiper, SwiperSlide } from "swiper/vue";
 import { Navigation, Pagination } from "swiper/modules";
+import { getReviewStats } from "@/api/board";
 
 import "swiper/css";
 import "swiper/css/navigation";
@@ -104,6 +105,23 @@ const contentId = route.params.id;
 const place = ref(null);
 const images = ref([]);
 const saved = ref(false);
+
+
+
+const reviewStats = ref({
+  avgRating: 0,
+  reviewCount: 0,
+});
+
+const fetchReviewStats = async () => {
+  try {
+    const { data } = await getReviewStats(contentId);
+    reviewStats.value = data;
+  } catch (e) {
+    console.error("리뷰 통계 조회 실패", e);
+  }
+};
+
 
 /* API */
 const fetchDetail = async () => {
@@ -167,6 +185,7 @@ const sharePlace = async () => {
 onMounted(async () => {
   await fetchDetail();
   await fetchImages();
+  await fetchReviewStats();
   window.scrollTo(0, 0);
   if (place.value?.mapx && place.value?.mapy) initMap();
 });

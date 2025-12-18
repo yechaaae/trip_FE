@@ -1,94 +1,75 @@
 <template>
-  <div class="write-container">
-    <h1>{{ isReview ? '리뷰 작성' : '자유글 작성' }}</h1>
+    <div class="write-container">
+        <h1>{{ isReview ? '리뷰 작성' : '자유글 작성' }}</h1>
 
-    <form class="form" @submit.prevent="submitReview">
+        <form class="form" @submit.prevent="submitReview">
 
-      <label v-if="isReview">관광지 (제목)</label>
-      <label v-else>제목</label>
-      
-      <div v-if="isReview" class="attraction-search-area">
-        <div class="search-row">
-            <input 
-                type="text" 
-                v-model="title" 
-                placeholder="관광지를 검색해주세요" 
-                readonly 
-                required 
-                @click="openSearchModal"
-            />
-            <button type="button" class="search-btn" @click="openSearchModal">🔍 검색</button>
-        </div>
-        <p v-if="selectedAttraction" class="selected-info">
-            선택된 관광지: <strong>{{ selectedAttraction.title }}</strong> ({{ selectedAttraction.addr1 }})
-        </p>
-      </div>
-      
-      <input 
-        v-else 
-        type="text" 
-        v-model="title" 
-        placeholder="제목을 입력해주세요." 
-        required 
-      />
+            <label v-if="isReview">관광지 (제목)</label>
+            <label v-else>제목</label>
 
-      <div v-if="isReview">
-          <label>별점</label>
-          <StarRating v-model="rating" />
-      </div>
-
-      <label>사진 업로드 {{ isReview ? '(필수)' : '(선택)' }}</label>
-      <input type="file" @change="handleFile" accept="image/*" />
-
-      <label>내용</label>
-      <textarea
-        v-model="content"
-        rows="10"
-        :placeholder="isReview ? '여행은 어떠셨나요? 상세하게 작성해주세요 😊' : '자유롭게 이야기를 나누어보세요.'"
-        required
-      />
-
-      <button type="submit" class="submit-btn">작성 완료</button>
-    </form>
-
-    <div v-if="showModal" class="modal-overlay" @click.self="showModal = false">
-        <div class="modal-content">
-            <h3>관광지 검색</h3>
-            <div class="modal-search-box">
-                <input 
-                  v-model="modalSearchKeyword" 
-                  placeholder="관광지 이름 (예: 경복궁)" 
-                  @keyup.enter="realSearch" 
-                />
-                <button @click="realSearch">찾기</button>
+            <div v-if="isReview" class="attraction-search-area">
+                <div class="search-row">
+                    <input type="text" v-model="title" placeholder="관광지를 검색해주세요" readonly required
+                        @click="openSearchModal" />
+                    <button type="button" class="search-btn" @click="openSearchModal">🔍 검색</button>
+                </div>
+                <p v-if="selectedAttraction" class="selected-info">
+                    선택된 관광지: <strong>{{ selectedAttraction.title }}</strong> ({{ selectedAttraction.addr1 }})
+                </p>
             </div>
-            
-            <ul class="result-list">
-                <li v-if="searchResults.length === 0 && isSearched">검색 결과가 없습니다.</li>
-                <li v-for="item in searchResults" :key="item.contentId" @click="selectAttraction(item)">
-                    <strong>{{ item.title }}</strong>
-                    <br/>
-                    <small>{{ item.addr1 }}</small>
-                </li>
-            </ul>
-            <button class="close-btn" @click="showModal = false">닫기</button>
-        </div>
-    </div>
 
-  </div>
+            <input v-else type="text" v-model="title" placeholder="제목을 입력해주세요." required />
+
+            <div v-if="isReview">
+                <label>별점</label>
+                <StarRating v-model="rating" />
+            </div>
+
+            <label>사진 업로드 {{ isReview ? '(필수)' : '(선택)' }}</label>
+            <input type="file" @change="handleFile" accept="image/*" />
+
+            <label>내용</label>
+            <textarea v-model="content" rows="10"
+                :placeholder="isReview ? '여행은 어떠셨나요? 상세하게 작성해주세요 😊' : '자유롭게 이야기를 나누어보세요.'" required />
+
+            <button type="submit" class="submit-btn">작성 완료</button>
+        </form>
+
+        <div v-if="showModal" class="modal-overlay" @click.self="showModal = false">
+            <div class="modal-content">
+                <h3>관광지 검색</h3>
+                <div class="modal-search-box">
+                    <input v-model="modalSearchKeyword" placeholder="관광지 이름 (예: 경복궁)" @keyup.enter="realSearch" />
+                    <button @click="realSearch">찾기</button>
+                </div>
+
+                <ul class="result-list">
+                    <li v-if="searchResults.length === 0 && isSearched">검색 결과가 없습니다.</li>
+                    <li v-for="item in searchResults" :key="item.contentId" @click="selectAttraction(item)">
+                        <strong>{{ item.title }}</strong>
+                        <br />
+                        <small>{{ item.addr1 }}</small>
+                    </li>
+                </ul>
+                <button class="close-btn" @click="showModal = false">닫기</button>
+            </div>
+        </div>
+
+    </div>
 </template>
 
 <script setup>
 import { ref, computed, onMounted } from "vue";
 import { useRouter, useRoute } from "vue-router";
-import axios from "axios"; 
+import axios from "axios";
 import StarRating from "@/components/StarRating.vue";
 
 const router = useRouter();
 const route = useRoute();
 
 // URL 파라미터에 id가 있으면 '수정 모드'로 인식
-const boardId = route.params.boardId; 
+const boardId = route.params.boardId;
+const contentId = route.query.placeId;
 const isEditMode = computed(() => !!boardId); // boardId가 있으면 true
 
 // 쿼리 파라미터로 넘어온 type 확인 (기본값은 2)
@@ -122,8 +103,8 @@ onMounted(async () => {
             if (data.contentId) {
                 selectedAttraction.value = {
                     contentId: data.contentId,
-                    title: data.attractionTitle || "이전 선택 관광지", 
-                    addr1: "" 
+                    title: data.attractionTitle || "이전 선택 관광지",
+                    addr1: ""
                 };
             }
         } catch (error) {
@@ -134,7 +115,7 @@ onMounted(async () => {
 });
 
 const handleFile = (e) => {
-  imageFile.value = e.target.files[0];
+    imageFile.value = e.target.files[0];
 };
 
 const openSearchModal = () => {
@@ -149,14 +130,14 @@ const realSearch = async () => {
         alert("검색어를 입력하세요.");
         return;
     }
-    
+
     try {
         const response = await axios.get("http://localhost:8080/attraction/search", {
             params: {
                 keyword: modalSearchKeyword.value,
                 contentTypeId: 12
             },
-            withCredentials: true 
+            withCredentials: true
         });
 
         console.log("검색 결과 원본:", response.data); // F12 콘솔에서 확인 필수!
@@ -167,9 +148,9 @@ const realSearch = async () => {
         // 만약 데이터가 객체 형태로 감싸져 있다면 벗겨내기
         if (items.response && items.response.body && items.response.body.items) {
             items = items.response.body.items.item;
-        } 
+        }
         else if (items.response && items.response.body) {
-             items = []; // 데이터가 없는 경우
+            items = []; // 데이터가 없는 경우
         }
 
         // 배열이 아니면 배열로 강제 변환 (결과가 1개일 때 객체로 오는 경우 대비)
@@ -187,116 +168,220 @@ const realSearch = async () => {
 };
 
 const selectAttraction = (item) => {
-    console.log("선택한 아이템:", item); // 클릭했을 때 콘솔 확인
+  console.log("선택한 관광지 item:", item);
 
-    selectedAttraction.value = item;
-    
-    // API마다 제목 필드명이 다를 수 있음 (title, spotTitle 등 확인 필요)
-    // 여기서는 item.title이 없으면 item.addr1이라도 넣도록 안전장치 추가
-    title.value = item.title || item.addr1 || "이름 없음"; 
-    
-    showModal.value = false;
-};
-
-// ★ [수정됨] 작성 및 수정 요청 처리
-const submitReview = async () => {
-  if (isReview.value && !selectedAttraction.value) {
-      alert("관광지를 선택해주세요!"); return;
-  }
-  if (!content.value) {
-      alert("내용을 입력해주세요."); return;
-  }
-
-  // 데이터 객체 생성
-  const boardDto = {
-    boardId: isEditMode.value ? boardId : 0, // 수정 시 ID 필수
-    title: title.value,
-    content: content.value,
-    type: pageType.value,
-    rating: isReview.value ? rating.value : 0,
-    contentId: isReview.value ? selectedAttraction.value.contentId : null
+  selectedAttraction.value = {
+    contentId: item.contentid,   
+    title: item.title,
+    addr1: item.addr1,
   };
 
-  try {
-    if (isEditMode.value) {
-        // [수정: PUT] 
-        // 파일 수정이 없다면 JSON만 보냄 (Controller: @RequestBody)
-        // 파일 수정까지 고려하면 복잡해지므로 일단 텍스트 수정 위주로 구현
-        await axios.put("http://localhost:8080/api/board", boardDto, {
-             withCredentials: true 
-        });
-        alert("수정되었습니다.");
-    } else {
-        // [작성: POST] FormData 사용 (Controller: @RequestPart)
-        const formData = new FormData();
-        formData.append("boardDto", new Blob([JSON.stringify(boardDto)], { type: "application/json" }));
-        if (imageFile.value) formData.append("file", imageFile.value);
+  title.value = item.title || item.addr1 || "이름 없음";
+  showModal.value = false;
+};
 
-        await axios.post("http://localhost:8080/api/board", formData, {
-            headers: { "Content-Type": "multipart/form-data" },
-            withCredentials: true,
-        });
-        alert("작성되었습니다.");
+
+//  작성 및 수정 요청 처리
+const submitReview = async () => {
+    if (isReview.value && !selectedAttraction.value) {
+        alert("관광지를 선택해주세요!");
+        return;
     }
-    router.push("/board");
-  } catch (error) {
-    console.error("전송 실패:", error);
-    alert("오류가 발생했습니다.");
-  }
+    if (!content.value) {
+        alert("내용을 입력해주세요.");
+        return;
+    }
+
+    // 1️⃣ boardDto에는 contentId 넣지 않음
+    const boardDto = {
+        boardId: isEditMode.value ? boardId : 0,
+        title: title.value,
+        content: content.value,
+        type: pageType.value,
+        rating: isReview.value ? rating.value : 0
+    };
+
+    try {
+        if (isEditMode.value) {
+            // 수정
+            await axios.put("http://localhost:8080/api/board", boardDto, {
+                withCredentials: true
+            });
+            alert("수정되었습니다.");
+        } else {
+            // 작성
+            const formData = new FormData();
+
+            formData.append(
+                "boardDto",
+                new Blob([JSON.stringify(boardDto)], {
+                    type: "application/json",
+                })
+            );
+
+            // 🔥 리뷰일 때만 contentId 추가
+            if (isReview.value) {
+                formData.append(
+                    "contentId",
+                    selectedAttraction.value.contentId
+                );
+            }
+
+            if (imageFile.value) {
+                formData.append("file", imageFile.value);
+            }
+
+            await axios.post("http://localhost:8080/api/board", formData, {
+                headers: { "Content-Type": "multipart/form-data" },
+                withCredentials: true,
+            });
+
+            alert("작성되었습니다.");
+        }
+
+        router.push("/board");
+    } catch (error) {
+        console.error("전송 실패:", error);
+        alert("오류가 발생했습니다.");
+    }
 };
 </script>
 
 <style scoped lang="scss">
 /* 기존 CSS 유지 + 모달 내부 스타일 약간 보강 */
 .write-container {
-  max-width: 640px; margin: 0 auto; padding: 32px 16px;
-  h1 { text-align: center; margin-bottom: 26px; }
+    max-width: 640px;
+    margin: 0 auto;
+    padding: 32px 16px;
+
+    h1 {
+        text-align: center;
+        margin-bottom: 26px;
+    }
 }
 
-.form { display: flex; flex-direction: column; gap: 18px; }
+.form {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
 
-label { font-size: 16px; font-weight: 600; margin-bottom: 4px; display: block; }
+label {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 4px;
+    display: block;
+}
 
-input, textarea {
-  width: 100%; padding: 12px 14px; font-size: 15px;
-  border: 1px solid #cfd6e3; border-radius: 6px; box-sizing: border-box; 
+input,
+textarea {
+    width: 100%;
+    padding: 12px 14px;
+    font-size: 15px;
+    border: 1px solid #cfd6e3;
+    border-radius: 6px;
+    box-sizing: border-box;
 }
 
 /* 관광지 검색 영역 스타일 */
-.search-row { display: flex; gap: 10px; }
-.search-btn {
-    white-space: nowrap; padding: 0 16px; background: #eee;
-    border: 1px solid #ccc; border-radius: 6px; cursor: pointer;
+.search-row {
+    display: flex;
+    gap: 10px;
 }
-.selected-info { font-size: 14px; color: #0066ff; margin-top: 5px; }
+
+.search-btn {
+    white-space: nowrap;
+    padding: 0 16px;
+    background: #eee;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.selected-info {
+    font-size: 14px;
+    color: #0066ff;
+    margin-top: 5px;
+}
 
 .submit-btn {
-  margin-top: 14px; padding: 14px; font-size: 17px; border: none;
-  border-radius: 6px; background: #0066ff; color: white;
-  cursor: pointer; transition: 0.2s; font-weight: bold;
+    margin-top: 14px;
+    padding: 14px;
+    font-size: 17px;
+    border: none;
+    border-radius: 6px;
+    background: #0066ff;
+    color: white;
+    cursor: pointer;
+    transition: 0.2s;
+    font-weight: bold;
 }
-.submit-btn:hover { background: #0052d8; }
+
+.submit-btn:hover {
+    background: #0052d8;
+}
 
 /* 모달 스타일 */
 .modal-overlay {
-    position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-    background: rgba(0,0,0,0.5);
-    display: flex; justify-content: center; align-items: center;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
     z-index: 1000;
 }
-.modal-content {
-    background: white; padding: 20px; border-radius: 8px;
-    width: 400px; max-height: 80vh; overflow-y: auto;
-    display: flex; flex-direction: column;
-}
-.modal-search-box { display: flex; gap: 8px; margin-bottom: 10px; }
-.modal-search-box input { flex: 1; }
 
-.result-list { list-style: none; padding: 0; margin-top: 10px; }
-.result-list li {
-    padding: 10px; border-bottom: 1px solid #eee; cursor: pointer;
+.modal-content {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    width: 400px;
+    max-height: 80vh;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
 }
-.result-list li:hover { background: #f0f8ff; }
-.result-list li small { color: #888; }
-.close-btn { margin-top: 10px; padding: 8px; background: #f1f1f1; border: none; cursor: pointer; border-radius: 4px;}
+
+.modal-search-box {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+
+.modal-search-box input {
+    flex: 1;
+}
+
+.result-list {
+    list-style: none;
+    padding: 0;
+    margin-top: 10px;
+}
+
+.result-list li {
+    padding: 10px;
+    border-bottom: 1px solid #eee;
+    cursor: pointer;
+}
+
+.result-list li:hover {
+    background: #f0f8ff;
+}
+
+.result-list li small {
+    color: #888;
+}
+
+.close-btn {
+    margin-top: 10px;
+    padding: 8px;
+    background: #f1f1f1;
+    border: none;
+    cursor: pointer;
+    border-radius: 4px;
+}
 </style>
