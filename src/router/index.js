@@ -1,4 +1,5 @@
 import { createRouter, createWebHistory } from "vue-router";
+import AttractionDetailPage from '@/pages/PlaceDetailPage.vue'
 
 const routes = [
   // ===== 메인 페이지 =====
@@ -21,6 +22,12 @@ const routes = [
   // ===== 마이페이지 =====
   { path: "/mypage", name: "MyPage", component: () => import("@/pages/MyPage.vue") },
   { path: "/mypage/profile-edit", name: "ProfileEdit", component: () => import("@/pages/ProfileEditPage.vue") },
+
+  {
+    path: '/attraction/:id', // :id 부분이 contentId가 됩니다.
+    name: 'AttractionDetail',
+    component: AttractionDetailPage
+  },
 ];
 
 const router = createRouter({
