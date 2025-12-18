@@ -1,59 +1,121 @@
 <template>
-  <div class="home-container">
-    <section class="map-section">
-      <div class="map-wrapper">
-        <MapView />
-      </div>
-    </section>
+  <div class="home-page">
+    <div class="home-container">
 
-    <aside class="badge-section">
-      <h2>🏅 나의 뱃지함</h2>
-      <div class="badge-list">
-        <div class="badge-item" v-for="n in 12" :key="n">
-          <div class="badge-circle"></div>
-          <p>뱃지 {{ n }}</p>
+      <!-- 왼쪽 지도 -->
+      <section class="map-section">
+        <div class="map-wrapper">
+
+          <!-- 🔹 FILTER BAR -->
+          <div class="filter-bar">
+            <button
+              class="filter-btn"
+              :class="{ active: filters.saved }"
+              @click="toggleFilter('saved')"
+            >
+              <i class="fa-solid fa-heart"></i>
+              저장
+            </button>
+
+            <button
+              class="filter-btn"
+              :class="{ active: filters.reviewed }"
+              @click="toggleFilter('reviewed')"
+            >
+              <i class="fa-solid fa-pen"></i>
+              리뷰
+            </button>
+          </div>
+
+          <MapView />
         </div>
-      </div>
-    </aside>
+      </section>
+
+      <!-- 오른쪽 뱃지 카드 -->
+      <aside class="badge-card">
+        <h2>🏅 나의 뱃지함</h2>
+        <div class="badge-list">
+          <div class="badge-item" v-for="n in 12" :key="n">
+            <div class="badge-circle"></div>
+            <p>뱃지 {{ n }}</p>
+          </div>
+        </div>
+      </aside>
+
+    </div>
   </div>
 </template>
 
 <script setup>
-    import MapView from "@/components/MapView.vue"
+  import { reactive } from "vue";
+  import MapView from "@/components/MapView.vue";
+
+  const filters = reactive({
+    saved: false,
+    reviewed: false,
+  });
+
+  const toggleFilter = (type) => {
+    filters[type] = !filters[type];
+  };
 </script>
 
 <style scoped lang="scss">
-.home-container {
-  display: flex;
+/* ===================
+   PAGE LAYOUT
+=================== */
+.home-page {
   width: 100%;
   height: calc(100vh - 60px); // 네비바 높이 제외
+  display: flex;
+  justify-content: center;
 }
 
-/* 왼쪽 지도 */
+.home-container {
+  width: 100%;
+  max-width: 1100px;
+  padding: 20px;
+
+  display: flex;
+  gap: 20px;
+  height: 100%;
+}
+
+/* ===================
+   MAP
+=================== */
 .map-section {
   flex: 7;
-  border-right: 1px solid #e5e5e5;
-  display: flex;            /* 지도 wrapper가 부모 높이를 받을 수 있게 */
+  display: flex;
 }
 
-/* 지도 wrapper (MapView가 들어가는 자리) */
 .map-wrapper {
   width: 100%;
   height: 100%;
-  display: flex;
+  border-radius: 16px;
+  overflow: hidden;
+
+  position: relative; 
 }
 
-/* 오른쪽 뱃지 보관함 */
-.badge-section {
-  flex: 2;
+/* ===================
+   BADGE CARD
+=================== */
+.badge-card {
+  flex: 3;
+  background: #fff;
+  border-radius: 16px;
   padding: 24px;
+
   display: flex;
   flex-direction: column;
-  overflow-y: auto;
+
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
 
   h2 {
-    margin-bottom: 18px;
     font-size: 22px;
+    font-weight: 700;
+    margin-bottom: 20px;
   }
 
   .badge-list {
@@ -66,18 +128,83 @@
     display: flex;
     flex-direction: column;
     align-items: center;
+    cursor: pointer;
 
     .badge-circle {
       width: 70px;
       height: 70px;
       border-radius: 50%;
       background: #dbe6ff;
+      transition: transform 0.2s ease;
     }
 
     p {
       font-size: 14px;
       margin-top: 6px;
     }
+
+    &:hover .badge-circle {
+      transform: scale(1.08);
+    }
   }
 }
+
+/* ===================
+   FILTER BAR
+=================== */
+.filter-bar {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  z-index: 30;
+
+  display: flex;
+  gap: 10px;
+
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(6px);
+  border-radius: 999px;
+  padding: 8px 10px;
+
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
+}
+
+.filter-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+
+  padding: 8px 14px;
+  border-radius: 999px;
+  border: none;
+  background: transparent;
+
+  font-size: 14px;
+  font-weight: 600;
+  color: #555;
+  cursor: pointer;
+
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.filter-btn i {
+  font-size: 14px;
+}
+
+/* 선택되지 않은 상태 hover */
+.filter-btn:hover {
+  background: #f1f3f5;
+}
+
+/* 🔥 선택된 상태 */
+.filter-btn.active {
+  background: #e7edff;
+  color: #3b5bdb;
+}
+
+/* 아이콘 색도 같이 */
+.filter-btn.active i {
+  color: #3b5bdb;
+}
+
 </style>
