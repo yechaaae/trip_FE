@@ -2,7 +2,7 @@
   <div class="home-page">
     <div class="home-container">
 
-      <!-- 왼쪽 지도 -->
+      <!-- 지도 영역 -->
       <section class="map-section">
         <div class="map-wrapper">
 
@@ -27,37 +27,38 @@
             </button>
           </div>
 
-          <MapView />
+          <!-- 🔹 filters 전달 -->
+          <MapView :filters="filters" />
         </div>
       </section>
 
-      <!-- 오른쪽 뱃지 카드 -->
+      <!-- 뱃지 카드 -->
       <aside class="badge-card">
         <h2>🏅 나의 뱃지함</h2>
+
         <div class="badge-list">
-          <div class="badge-item" v-for="n in 12" :key="n">
+          <div class="badge-item" v-for="n in 9" :key="n">
             <div class="badge-circle"></div>
             <p>뱃지 {{ n }}</p>
           </div>
         </div>
       </aside>
-
     </div>
   </div>
 </template>
 
 <script setup>
-  import { reactive } from "vue";
-  import MapView from "@/components/MapView.vue";
+import { reactive } from "vue";
+import MapView from "@/components/MapView.vue";
 
-  const filters = reactive({
-    saved: false,
-    reviewed: false,
-  });
+const filters = reactive({
+  saved: false,
+  reviewed: false,
+});
 
-  const toggleFilter = (type) => {
-    filters[type] = !filters[type];
-  };
+const toggleFilter = (type) => {
+  filters[type] = !filters[type];
+};
 </script>
 
 <style scoped lang="scss">
