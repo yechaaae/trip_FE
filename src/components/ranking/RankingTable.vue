@@ -1,55 +1,37 @@
 <template>
-  <div class="ranking-container">
+  <div class="ranking-table">
     <div class="ranking-header">
       <span>순위</span>
       <span>사용자</span>
       <span>{{ valueLabel }}</span>
     </div>
 
-    <div v-for="(user, index) in list" :key="user.id" class="ranking-row">
-      <!-- 순위 -->
+    <div v-for="(user, index) in list" :key="user.nickname" class="ranking-row">
       <span class="rank">{{ startRank + index }}</span>
 
-      <!-- 사용자 (hover + click) -->
-      <span class="nickname">
-        <UserHoverCard
-          :user="{
-            id: user.id,
-            nickname: user.nickname,
-            badges: user.badges ?? 0,
-            reviews: user.reviews ?? user.value,
-          }"
-        />
-      </span>
+      <!-- UserHoverCard 추가 -->
+      <UserHoverCard :user="user" />
 
-      <!-- 값 -->
       <span class="count">{{ user.value }}</span>
     </div>
   </div>
 </template>
 
 <script setup>
-import UserHoverCard from "@/components/user/UserHoverCard.vue";
+import { ref } from "vue";
+import UserHoverCard from "@/components/user/UserHoverCard.vue"; // 경로 확인
 
-defineProps({
-  list: {
-    type: Array,
-    required: true,
-  },
-  valueLabel: {
-    type: String,
-    required: true,
-  },
-  startRank: {
-    type: Number,
-    default: 4,
-  },
+// props for receiving data from parent component
+const props = defineProps({
+  list: Array,
+  valueLabel: String,
+  startRank: Number,
 });
 </script>
 
 <style scoped>
-.ranking-container {
-  border-top: 1px solid #ddd;
+.ranking-table {
+  margin-top: 40px;
 }
 
 .ranking-header,
@@ -75,19 +57,12 @@ defineProps({
   font-weight: 700;
 }
 
+.nickname {
+  font-weight: 500;
+}
+
 .count {
   text-align: right;
   font-weight: 600;
-}
-
-/* Top 3 */
-.top1 {
-  background-color: #fff7d6;
-}
-.top2 {
-  background-color: #f4f6f8;
-}
-.top3 {
-  background-color: #fff2e8;
 }
 </style>
