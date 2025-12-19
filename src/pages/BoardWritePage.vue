@@ -165,10 +165,13 @@ const realSearch = async () => {
       },
       withCredentials: true,
     });
+    console.log("검색 결과:", response.data);
 
-    let items = data;
-    if (items?.response?.body?.items?.item) {
+    let items = response.data;
+    if (items.response && items.response.body && items.response.body.items) {
       items = items.response.body.items.item;
+    } else if (items.response && items.response.body) {
+      items = [];
     }
 
     if (items && !Array.isArray(items)) items = [items];
@@ -186,7 +189,7 @@ const selectAttraction = (item) => {
     title: item.title,
     addr1: item.addr1,
   };
-  title.value = item.title;
+  title.value = item.title || item.addr1 || "이름 없음";
   showModal.value = false;
 };
 
@@ -198,13 +201,17 @@ const submitReview = async () => {
     alert("관광지를 선택해주세요.");
     return;
   }
-
+  if (!content.value) {
+    alert("내용을 입력해주세요.");
+    return;
+  }
   const boardDto = {
     boardId: isEditMode.value ? boardId : 0,
     title: title.value,
     content: content.value,
     type: pageType.value,
     rating: isReview.value ? rating.value : 0,
+    contentId: isReview.value ? selectedAttraction.value.contentId : null,
   };
 
   try {
@@ -252,6 +259,10 @@ const submitReview = async () => {
   max-width: 640px;
   margin: 0 auto;
   padding: 32px 16px;
+  h1 {
+    text-align: center;
+    margin-bottom: 26px;
+  }
 }
 
 .form {
@@ -260,22 +271,45 @@ const submitReview = async () => {
   gap: 18px;
 }
 
+label {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 4px;
+  display: block;
+}
+
+input,
+textarea {
+  width: 100%;
+  padding: 12px 14px;
+  font-size: 15px;
+  border: 1px solid #cfd6e3;
+  border-radius: 6px;
+  box-sizing: border-box;
+}
+
 .search-row {
   display: flex;
   gap: 10px;
 }
 
 .search-btn {
+  white-space: nowrap;
   padding: 0 16px;
+  background: #eee;
+  border: 1px solid #ccc;
   border-radius: 6px;
+  cursor: pointer;
 }
 
 .selected-info {
   font-size: 14px;
   color: #0066ff;
+  margin-top: 5px;
 }
 
 .submit-btn {
+  margin-top: 14px;
   padding: 14px;
   font-size: 17px;
   background: #0066ff;
@@ -283,5 +317,74 @@ const submitReview = async () => {
   border: none;
   border-radius: 6px;
   font-weight: bold;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.submit-btn:hover {
+  background: #0052d8;
+}
+
+.modal-overlay {
+  position: fixed; /* 화면 고정 */
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5); /* 배경 어둡게 */
+  display: flex;
+  justify-content: center;
+  align-items: center; /* 정중앙 정렬 */
+  z-index: 1000;
+}
+
+.modal-content {
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  width: 400px;
+  max-height: 80vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.modal-search-box {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.modal-search-box input {
+  flex: 1; /* 검색창 늘리기 */
+}
+
+.result-list {
+  list-style: none;
+  padding: 0;
+  margin-top: 10px;
+}
+
+.result-list li {
+  padding: 10px;
+  border-bottom: 1px solid #eee;
+  cursor: pointer;
+}
+
+.result-list li:hover {
+  background: #f0f8ff;
+}
+
+.result-list li small {
+  color: #888;
+}
+
+.close-btn {
+  margin-top: 10px;
+  padding: 8px;
+  background: #f1f1f1;
+  border: none;
+  cursor: pointer;
+  border-radius: 4px;
 }
 </style>
