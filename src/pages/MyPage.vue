@@ -87,7 +87,49 @@
         </div>
 
         <div v-if="tab === 'likedReviews'">
-          <p style="color: #888; text-align: center; padding: 20px">준비 중인 기능입니다.</p>
+          <div v-if="likedReviews.length === 0" style="color: #888; text-align: center; padding: 20px">
+            좋아요 한 리뷰가 없습니다.
+          </div>
+
+          <div
+            v-for="review in likedReviews"
+            :key="review.boardId"
+            @click="router.push(`/board/${review.boardId}`)"
+            style="display: flex; gap: 15px; border-bottom: 1px solid #eee; padding: 15px 0; cursor: pointer"
+          >
+            <img
+              v-if="review.saveFile"
+              :src="`http://localhost:8080/upload/${review.saveFile}`"
+              style="width: 100px; height: 75px; object-fit: cover; border-radius: 6px; background: #eee"
+            />
+            <div
+              v-else
+              style="
+                width: 100px;
+                height: 75px;
+                background: #f0f0f0;
+                border-radius: 6px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 12px;
+                color: #aaa;
+              "
+            >
+              이미지 없음
+            </div>
+
+            <div style="flex: 1">
+              <h4 style="margin: 0 0 6px 0; font-size: 16px">{{ review.title }}</h4>
+              <div style="font-size: 13px; color: #666; margin-bottom: 4px">
+                <span style="color: #f39c12; font-weight: bold">⭐ {{ review.rating }}</span>
+                &nbsp;|&nbsp; ❤️ {{ review.likeCount }} &nbsp;|&nbsp; 작성자: {{ review.nickName }}
+              </div>
+              <div style="font-size: 12px; color: #999">
+                {{ review.registDate ? review.registDate.split(" ")[0] : "" }}
+              </div>
+            </div>
+          </div>
         </div>
 
         <div v-if="tab === 'savedPlaces'">
@@ -146,7 +188,7 @@ const api = axios.create({
   baseURL: "http://localhost:8080",
   withCredentials: true,
 });
-
+const likedReviews = ref([]);
 const route = useRoute();
 const isOtherUser = ref(false);
 const router = useRouter();
@@ -263,6 +305,9 @@ const fetchMyActivity = async () => {
 
     const bookmarkRes = await api.get("/api/mypage/bookmark");
     savedPlaces.value = bookmarkRes.data;
+
+    const likeRes = await api.get("/api/mypage/like");
+    likedReviews.value = likeRes.data;
   } catch (error) {
     console.error("내 활동 로딩 실패:", error);
   }
