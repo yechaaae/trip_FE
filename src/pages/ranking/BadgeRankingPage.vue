@@ -1,29 +1,35 @@
 <template>
-  <!-- Top 3 카드 영역 -->
-  <TopRankCard :top3="top3" value-label="뱃지" />
+  <div class="ranking-page">
+    <!-- Top 3 카드 영역 -->
+    <TopRankCard :top3="top3" value-label="뱃지 수" />
 
-  <!-- 4위부터 랭킹 테이블 -->
-  <RankingTable :list="restList" value-label="뱃지 수" :start-rank="4" />
+    <!-- 4위부터 랭킹 테이블 -->
+    <RankingTable :list="restList" value-label="뱃지 수" :start-rank="4" />
+  </div>
 </template>
 
 <script setup>
 import TopRankCard from "@/components/ranking/TopRankCard.vue";
 import RankingTable from "@/components/ranking/RankingTable.vue";
+import { ref, onMounted } from "vue";
+import axios from "axios";
 
-/**
- * TODO
- * - API 연동 시 서버 데이터로 교체
- * - value = 뱃지 개수
- */
+const top3 = ref([]);
+const restList = ref([]);
 
-const rankingList = [
-  { id: 1, nickname: "수집왕", value: 24 },
-  { id: 2, nickname: "여행덕후", value: 19 },
-  { id: 3, nickname: "뱃지헌터", value: 15 },
-  { id: 4, nickname: "주말여행러", value: 12 },
-  { id: 5, nickname: "혼행족", value: 9 },
-];
+const fetchRankingData = async () => {
+  try {
+    const response = await axios.get("http://localhost:8080/api/ranking/badges");
+    const rankingList = response.data;
 
-const top3 = rankingList.slice(0, 3);
-const restList = rankingList.slice(3);
+    top3.value = rankingList.slice(0, 3); // 상위 3명
+    restList.value = rankingList.slice(3); // 나머지
+  } catch (error) {
+    console.error("뱃지 랭킹 데이터 로딩 실패:", error);
+  }
+};
+
+onMounted(() => {
+  fetchRankingData(); // 페이지가 로드되면 데이터를 불러옵니다.
+});
 </script>

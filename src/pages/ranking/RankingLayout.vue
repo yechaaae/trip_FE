@@ -1,6 +1,5 @@
 <template>
   <div class="ranking-layout">
-    <!-- 페이지 타이틀 -->
     <h1 class="page-title">사용자 랭킹</h1>
 
     <!-- 랭킹 탭 -->
