@@ -209,20 +209,19 @@ const selectAttraction = (item) => {
    SUBMIT
 ====================== */
 const submitReview = async () => {
-  if (isReview.value && !selectedAttraction.value) {
-    alert("관광지를 선택해주세요.");
-    return;
+  // 1. 유효성 검사
+  if (isReview.value) {
+    if (!selectedAttraction.value || !selectedAttraction.value.contentId) {
+      alert("관광지를 선택해주세요.");
+      return;
+    }
   }
-
-  if (isReview.value && !selectedAttraction.value.contentId) {
-    alert("선택된 관광지 정보가 올바르지 않습니다. 다시 검색해서 선택해주세요.");
-    return;
-  }
-
   if (!content.value) {
     alert("내용을 입력해주세요.");
     return;
   }
+
+  // 2. DTO 생성
   const boardDto = {
     boardId: isEditMode.value ? boardId : 0,
     title: title.value,
@@ -230,39 +229,35 @@ const submitReview = async () => {
     type: pageType.value,
     rating: isReview.value ? rating.value : 0,
     contentId: isReview.value ? selectedAttraction.value.contentId : null,
+    // [중요] 수정 시, 관광지 위치 정보도 업데이트 될 수 있으므로 포함
     latitude: isReview.value ? Number(selectedAttraction.value.latitude) : null,
     longitude: isReview.value ? Number(selectedAttraction.value.longitude) : null,
   };
 
   try {
+    // 3. FormData 생성 (작성/수정 공통)
+    const formData = new FormData();
+    formData.append("boardDto", new Blob([JSON.stringify(boardDto)], { type: "application/json" }));
+
+    // 파일이 새로 선택되었다면 추가
+    if (imageFile.value) {
+      formData.append("file", imageFile.value);
+    }
+
+    // 4. 전송 (작성은 POST /, 수정은 POST /modify)
     if (isEditMode.value) {
-      await axios.put("http://localhost:8080/api/board", boardDto, {
+      // [변경] 백엔드 Controller를 @PostMapping("/modify")로 바꿨으므로 여기도 맞춤
+      await axios.post("http://localhost:8080/api/board/modify", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
         withCredentials: true,
       });
       alert("수정되었습니다.");
     } else {
-      const formData = new FormData();
-
-      formData.append(
-        "boardDto",
-        new Blob([JSON.stringify(boardDto)], {
-          type: "application/json",
-        })
-      );
-
-      if (isReview.value) {
-        formData.append("contentId", selectedAttraction.value.contentId);
-      }
-
-      if (imageFile.value) {
-        formData.append("file", imageFile.value);
-      }
-
+      // 신규 작성
       await axios.post("http://localhost:8080/api/board", formData, {
         headers: { "Content-Type": "multipart/form-data" },
         withCredentials: true,
       });
-
       alert("작성되었습니다.");
     }
 

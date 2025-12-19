@@ -16,6 +16,12 @@ const routes = [
   { path: "/board", name: "Board", component: () => import("@/pages/BoardPage.vue") },
   { path: "/board/write", name: "BoardWrite", component: () => import("@/pages/BoardWritePage.vue") },
   { path: "/board/:id", name: "BoardDetail", component: () => import("@/pages/BoardDetailPage.vue"), props: true },
+  {
+    // [수정 완료] BoardWritePage 변수 대신 직접 import 함수를 넣습니다.
+    path: "/board/modify/:boardId",
+    name: "BoardModify",
+    component: () => import("@/pages/BoardWritePage.vue"),
+  },
 
   // ===== 회원 =====
   { path: "/login", name: "Login", component: () => import("@/pages/LoginPage.vue") },
