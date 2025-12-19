@@ -29,7 +29,7 @@
     <section class="action-bar">
       <div class="action-item" @click="toggleSave">
         <i :class="saved ? 'fa-solid fa-heart saved' : 'fa-regular fa-heart'"></i>
-        <span>{{ saved ? '저장됨' : '저장하기' }}</span>
+        <span>{{ saved ? "저장됨" : "저장하기" }}</span>
       </div>
 
       <div class="action-item" @click="goWriteReview">
@@ -48,23 +48,17 @@
       <h2>기본 정보</h2>
 
       <div class="info-item">
-        <span class="label">
-          <i class="fa-solid fa-location-dot"></i> 주소
-        </span>
+        <span class="label"> <i class="fa-solid fa-location-dot"></i> 주소 </span>
         <p class="value">{{ place.addr1 }}</p>
       </div>
 
       <div class="info-item" v-if="place.tel">
-        <span class="label">
-          <i class="fa-solid fa-phone"></i> 전화
-        </span>
+        <span class="label"> <i class="fa-solid fa-phone"></i> 전화 </span>
         <p class="value">{{ place.tel }}</p>
       </div>
 
       <div class="info-item" v-if="place.homepage">
-        <span class="label">
-          <i class="fa-solid fa-globe"></i> 홈페이지
-        </span>
+        <span class="label"> <i class="fa-solid fa-globe"></i> 홈페이지 </span>
         <p class="value" v-html="place.homepage"></p>
       </div>
     </section>
@@ -103,7 +97,6 @@ import { getReviewStats } from "@/api/board";
 const route = useRoute();
 const router = useRouter();
 const contentId = route.params.id;
-
 const KAKAO_MAP_KEY = import.meta.env.VITE_KAKAO_MAP_KEY;
 
 /* axios (세션 포함) */
@@ -145,15 +138,11 @@ const fetchImages = async () => {
 };
 
 const fetchReviewStats = async () => {
-  try {
-    const { data } = await getReviewStats(contentId);
-    reviewStats.value = {
-      avgRating: data.avgRating ?? 0,
-      reviewCount: data.reviewCount ?? 0,
-    };
-  } catch (e) {
-    console.error("리뷰 통계 조회 실패", e);
-  }
+  const { data } = await getReviewStats(contentId);
+  reviewStats.value = {
+    avgRating: data.avgRating ?? 0,
+    reviewCount: data.reviewCount ?? 0,
+  };
 };
 
 /* ======================
@@ -172,7 +161,7 @@ const checkSavedStatus = async () => {
       bookmarkId.value = null;
     }
   } catch {
-    // 비로그인 상태
+    // 비로그인
   }
 };
 
@@ -184,14 +173,17 @@ const toggleSave = async () => {
         title: place.value.title,
         addr1: place.value.addr1,
         firstImage: place.value.firstimage,
+        latitude: Number(place.value.mapy),
+        longitude: Number(place.value.mapx),
       });
       await checkSavedStatus();
+      alert("관광지가 저장되었습니다.");
     } catch (e) {
       alert("로그인이 필요합니다.");
       router.push("/login");
     }
   } else {
-    if (!confirm("저장을 취소할까요?")) return;
+    if (!confirm("저장을 취소하시겠습니까?")) return;
     await api.delete(`/api/mypage/bookmark/${bookmarkId.value}`);
     saved.value = false;
     bookmarkId.value = null;
@@ -209,99 +201,39 @@ const loadKakaoMap = () =>
     script.onload = () => window.kakao.maps.load(resolve);
     document.head.appendChild(script);
   });
-  
-  /* -------------------
-     ACTIONS
-  ------------------- */
-  // ★ [수정] DB 연동 저장/삭제 토글
-  const toggleSave = async () => {
-    if (!saved.value) {
-      // 1. 저장 (INSERT)
-      try {
-        // DTO 구조에 맞춰서 데이터 전송
-        const payload = {
-          contentId: Number(contentId),
-          title: place.value.title,
-          addr1: place.value.addr1,
-          firstImage: place.value.firstimage || place.value.firstImage, // API 버전에 따라 키값이 다를 수 있음
-          latitude: Number(place.value.mapy), 
-          longitude: Number(place.value.mapx)
-        
-        };
-  
-        await api.post("/api/mypage/bookmark", payload);
-        alert("관광지가 저장되었습니다. 📂");
-        
-        // 저장 후 ID 확인을 위해 상태 재조회
-        await checkSavedStatus();
-      } catch (error) {
-        if (error.response && error.response.status === 401) {
-          alert("로그인이 필요한 서비스입니다.");
-          router.push("/login");
-        } else {
-          alert("저장에 실패했습니다.");
-        }
-      }
-    } else {
-      // 2. 삭제 (DELETE)
-      if (!bookmarkId.value) return;
-  
-      if (!confirm("저장을 취소하시겠습니까?")) return;
-  
-      try {
-        await api.delete(`/api/mypage/bookmark/${bookmarkId.value}`);
-        saved.value = false;
-        bookmarkId.value = null;
-        alert("저장이 취소되었습니다.");
-      } catch (error) {
-        alert("삭제 중 오류가 발생했습니다.");
-      }
-    }
-  };
-  
-  const goWriteReview = () => router.push(`/board/write?placeId=${contentId}`);
-  const sharePlace = async () => {
-    await navigator.clipboard.writeText(window.location.href);
-    alert("링크가 복사되었습니다");
-  };
-  
-  /* -------------------
-     MOUNT
-  ------------------- */
-  onMounted(async () => {
-    await fetchDetail();
-    await fetchImages();
-    await checkSavedStatus(); // ★ 페이지 들어오면 저장 여부 확인
-  
-    window.scrollTo(0, 0);
-  
-    if (place.value?.mapx && place.value?.mapy) {
-      initMap();
-    }
+
+const initMap = async () => {
+  await loadKakaoMap();
+  await nextTick();
+
+  const mapContainer = document.getElementById("map");
+  const position = new kakao.maps.LatLng(place.value.mapy, place.value.mapx);
+
+  const map = new kakao.maps.Map(mapContainer, {
+    center: position,
+    level: 3,
   });
 
-  new kakao.maps.Marker({ map, position });
+  new kakao.maps.Marker({
+    map,
+    position,
+  });
 };
-
-/* ======================
-   COMPUTED
-====================== */
-const cleanOverview = computed(() =>
-  place.value?.overview
-    ? place.value.overview.replace(/<br\s*\/?>/gi, "\n")
-    : ""
-);
 
 /* ======================
    ACTIONS
 ====================== */
-const goWriteReview = () =>
-  router.push(`/board/write?placeId=${contentId}`);
+const goWriteReview = () => router.push(`/board/write?placeId=${contentId}`);
 
 const sharePlace = async () => {
   await navigator.clipboard.writeText(window.location.href);
   alert("링크가 복사되었습니다");
 };
+
+/* ======================
+   COMPUTED
+====================== */
+const cleanOverview = computed(() => (place.value?.overview ? place.value.overview.replace(/<br\s*\/?>/gi, "\n") : ""));
 
 /* ======================
    MOUNT
@@ -317,7 +249,6 @@ onMounted(async () => {
 });
 </script>
 
-
 <style scoped lang="scss">
 .detail-page {
   max-width: 1100px;
@@ -325,16 +256,12 @@ onMounted(async () => {
   padding: 30px 20px;
 }
 
-/* ===================
-   HEADER
-=================== */
 .header-section {
   margin-bottom: 24px;
 
   h1 {
     font-size: 32px;
     font-weight: 800;
-    line-height: 1.3;
   }
 
   .meta {
@@ -346,42 +273,14 @@ onMounted(async () => {
   }
 }
 
-/* ===================
-   IMAGE SLIDER
-=================== */
 .image-section {
   position: relative;
-  --swiper-navigation-color: rgb(140, 140, 140);
 
   img {
     width: 100%;
     aspect-ratio: 16 / 9;
     object-fit: cover;
     border-radius: 14px;
-  }
-
-  .swiper-button-prev,
-  .swiper-button-next {
-    width: 46px;
-    height: 46px;
-    border-radius: 50%;
-    background: rgba(0, 0, 0, 0.35);
-    backdrop-filter: blur(6px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-    opacity: 0.9;
-    transition: background 0.25s ease, box-shadow 0.25s ease;
-  }
-
-  .swiper-button-prev:hover,
-  .swiper-button-next:hover {
-    --swiper-navigation-color: rgb(90, 90, 90);
-    background: rgba(0, 0, 0, 0.55);
-  }
-
-  .swiper-pagination-bullet-active {
-    background: white;
-    width: 18px;
-    border-radius: 6px;
   }
 
   .img-count {
@@ -396,9 +295,6 @@ onMounted(async () => {
   }
 }
 
-/* ===================
-   ACTION BAR
-=================== */
 .action-bar {
   display: flex;
   justify-content: space-around;
@@ -406,29 +302,8 @@ onMounted(async () => {
   padding: 20px 0;
 }
 
-/* ===================
-   INFO
-=================== */
-.info-section {
-  margin-top: 36px;
-}
-
-/* ===================
-   MAP
-=================== */
-.map-section {
-  margin-top: 36px;
-
-  .map {
-    height: 360px;
-    border-radius: 14px;
-  }
-}
-
-/* ===================
-   OVERVIEW
-=================== */
-.overview-section {
-  margin-top: 36px;
+.map {
+  height: 360px;
+  border-radius: 14px;
 }
 </style>
