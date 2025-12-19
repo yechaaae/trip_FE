@@ -184,11 +184,23 @@ const realSearch = async () => {
 };
 
 const selectAttraction = (item) => {
+  // API마다 필드명이 다를 수 있으므로 둘 다 확인 (contentId 또는 contentid)
+  const id = item.contentId || item.contentid;
+
+  if (!id) {
+    console.error("관광지 ID를 찾을 수 없습니다:", item);
+    alert("선택한 관광지의 식별자(ID)가 없습니다. 다른 관광지를 선택해주세요.");
+    return;
+  }
+
   selectedAttraction.value = {
-    contentId: item.contentId,
+    contentId: id,
     title: item.title,
     addr1: item.addr1,
+    latitude: item.mapy || item.latitude,
+    longitude: item.mapx || item.longitude,
   };
+
   title.value = item.title || item.addr1 || "이름 없음";
   showModal.value = false;
 };
@@ -201,6 +213,12 @@ const submitReview = async () => {
     alert("관광지를 선택해주세요.");
     return;
   }
+
+  if (isReview.value && !selectedAttraction.value.contentId) {
+    alert("선택된 관광지 정보가 올바르지 않습니다. 다시 검색해서 선택해주세요.");
+    return;
+  }
+
   if (!content.value) {
     alert("내용을 입력해주세요.");
     return;
@@ -212,6 +230,8 @@ const submitReview = async () => {
     type: pageType.value,
     rating: isReview.value ? rating.value : 0,
     contentId: isReview.value ? selectedAttraction.value.contentId : null,
+    latitude: isReview.value ? Number(selectedAttraction.value.latitude) : null,
+    longitude: isReview.value ? Number(selectedAttraction.value.longitude) : null,
   };
 
   try {
