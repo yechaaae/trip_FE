@@ -12,7 +12,9 @@
     </p>
 
     <div class="actions">
-      <button>❤️ 좋아요 {{ post.likeCount }}</button>
+      <button class="action-btn like-btn" :class="{ liked: post.userLiked }" @click="toggleLike">
+        {{ post.userLiked ? "❤️" : "🤍" }} 좋아요 {{ post.likeCount }}
+      </button>
       <button>👀 조회수 {{ post.hit }}</button>
       <button>💬 댓글 {{ post.commentCount || 0 }}</button>
     </div>
@@ -45,20 +47,13 @@ onMounted(async () => {
   if (storedUser) {
     try {
       userInfo.value = JSON.parse(storedUser);
-      console.log("로그인 정보:", userInfo.value);
     } catch (e) {
-      console.error("세션 정보 파싱 실패", e);
+      console.error(e);
     }
   }
 
-  // 2. 게시글 상세 조회
-  try {
-    const { data } = await axios.get(`http://localhost:8080/api/board/${postId}`);
-    post.value = data;
-    console.log("게시글 정보:", post.value); // 작성자 ID 확인용
-  } catch (error) {
-    console.error("상세 조회 실패", error);
-  }
+  // 2. 게시글 상세 조회 호출 (수정됨)
+  await fetchPostDetail(true);
 });
 
 // 삭제 기능
@@ -86,6 +81,49 @@ const goModify = () => {
   // 수정 페이지 라우터가 있다면 이동 (ex: /board/modify/1)
   // 혹은 기존 Write 페이지를 재활용할 수도 있음
   router.push(`/board/modify/${postId}`);
+};
+
+// 좋아요 토글 함수
+const toggleLike = async () => {
+  // 1. 로그인 체크 (userInfo는 onMounted에서 세션스토리지에서 가져옴)
+  if (!userInfo.value) {
+    alert("로그인이 필요합니다.");
+    return;
+  }
+
+  try {
+    // 2. 좋아요 토글 API 호출 (POST)
+    // 백엔드 Controller가 Map을 받으므로 userId를 body에 담아 보냄
+    await axios.post(
+      `http://localhost:8080/api/board/like/${postId}`,
+      { userId: userInfo.value.userId },
+      { withCredentials: true } // 세션 유지를 위해 필수
+    );
+
+    // 3. 화면 갱신 (상세 정보를 다시 불러와서 숫자와 하트 상태 업데이트)
+    await fetchPostDetail(true);
+  } catch (error) {
+    console.error("좋아요 처리 실패", error);
+    alert("오류가 발생했습니다.");
+  }
+};
+
+// 게시글 상세 조회 함수
+const fetchPostDetail = async (shouldUpdateHit = true) => {
+  try {
+    // 백엔드에서 userLiked를 계산하려면 로그인 세션이 필요하므로 withCredentials 추가
+    const { data } = await axios.get(`http://localhost:8080/api/board/${postId}`, {
+      params: {
+        // true면 조회수 증가, false면 데이터만 가져옴
+        updateHit: shouldUpdateHit,
+      },
+      withCredentials: true,
+    });
+    post.value = data;
+    console.log("게시글 정보(갱신):", post.value);
+  } catch (error) {
+    console.error("상세 조회 실패", error);
+  }
 };
 </script>
 
@@ -130,8 +168,13 @@ const goModify = () => {
   border: none;
   cursor: pointer;
   font-size: 17px;
+  padding: 5px 10px;
+  border-radius: 5px;
+  transition: all 0.2s ease;
 }
-
+.action-btn:hover {
+  background-color: #f0f0f0;
+}
 /* 수정 삭제 버튼 스타일 */
 .owner-actions {
   margin-top: 30px;
@@ -157,5 +200,22 @@ const goModify = () => {
 }
 .delete-btn {
   background-color: #f44336;
+}
+
+/* 좋아요 버튼 전용 스타일 */
+.like-btn {
+  color: #555; /* 기본 색상 */
+}
+
+/* 좋아요 눌렀을 때 (.liked 클래스) */
+.like-btn.liked {
+  color: #ff4081; /* 핑크/빨강 계열 */
+  font-weight: bold;
+  background-color: #fff0f5; /* 연한 핑크 배경 */
+}
+
+/* 클릭 시 띠용~ 하는 애니메이션 효과 (선택사항) */
+.like-btn:active {
+  transform: scale(1.2);
 }
 </style>
