@@ -1,5 +1,7 @@
 import { createRouter, createWebHistory } from "vue-router";
-import AttractionDetailPage from '@/pages/PlaceDetailPage.vue'
+import AttractionDetailPage from "@/pages/PlaceDetailPage.vue";
+import RankingLayout from "@/pages/ranking/RankingLayout.vue";
+import ReviewRanking from "@/pages/ranking/ReviewRankingPage.vue";
 
 const routes = [
   // ===== 메인 페이지 =====
@@ -22,11 +24,39 @@ const routes = [
   // ===== 마이페이지 =====
   { path: "/mypage", name: "MyPage", component: () => import("@/pages/MyPage.vue") },
   { path: "/mypage/profile-edit", name: "ProfileEdit", component: () => import("@/pages/ProfileEditPage.vue") },
+  {
+    path: "/user/:userId",
+    name: "UserProfile",
+    component: () => import("@/pages/MyPage.vue"),
+  },
 
   {
-    path: '/attraction/:id', // :id 부분이 contentId가 됩니다.
-    name: 'AttractionDetail',
-    component: AttractionDetailPage
+    path: "/attraction/:id", // :id 부분이 contentId가 됩니다.
+    name: "AttractionDetail",
+    component: AttractionDetailPage,
+  },
+
+  {
+    path: "/ranking",
+    component: () => import("@/pages/ranking/RankingLayout.vue"),
+    redirect: "/ranking/review",
+    children: [
+      {
+        path: "review",
+        name: "ReviewRanking",
+        component: () => import("@/pages/ranking/ReviewRankingPage.vue"),
+      },
+      {
+        path: "badge",
+        name: "BadgeRanking",
+        component: () => import("@/pages/ranking/BadgeRankingPage.vue"),
+      },
+      {
+        path: "like",
+        name: "LikeRanking",
+        component: () => import("@/pages/ranking/LikeRankingPage.vue"),
+      },
+    ],
   },
 ];
 

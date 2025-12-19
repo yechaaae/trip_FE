@@ -1,12 +1,11 @@
 <template>
   <header class="navbar">
     <nav class="nav-links">
-
       <div class="left">
         <router-link to="/">홈</router-link>
         <router-link to="/area">지역별 보기</router-link>
-        <router-link to="/tour">여행 정보</router-link>
         <router-link to="/board">게시판</router-link>
+        <router-link to="/ranking/review">명예의 전당</router-link>
       </div>
 
       <div class="right">
@@ -15,12 +14,14 @@
         </template>
 
         <template v-else>
-          <span class="welcome-msg"><b>{{ userInfo.nickName }}</b>님 환영합니다!</span>
+          <span class="welcome-msg"
+            ><b>{{ userInfo.nickName }}</b
+            >님 환영합니다!</span
+          >
           <router-link to="/mypage">마이페이지</router-link>
           <button @click="logout" class="logout-btn">로그아웃</button>
         </template>
       </div>
-
     </nav>
   </header>
 </template>
@@ -42,11 +43,11 @@ const { clearLoginUser } = memberStore;
 const logout = async () => {
   try {
     // 1. 백엔드에 로그아웃 요청 (세션 삭제)
-    await api.get("/user/logout"); 
-    
+    await api.get("/user/logout");
+
     // 2. 프론트엔드 스토어 초기화
     clearLoginUser();
-    
+
     alert("로그아웃 되었습니다.");
     router.push("/"); // 메인으로 이동
   } catch (error) {
