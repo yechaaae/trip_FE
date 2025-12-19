@@ -165,9 +165,9 @@ const realSearch = async () => {
       },
       withCredentials: true,
     });
-    console.log("검색 결과:", response.data);
+    console.log("검색 결과:", data);
 
-    let items = response.data;
+    let items = data;
     if (items.response && items.response.body && items.response.body.items) {
       items = items.response.body.items.item;
     } else if (items.response && items.response.body) {
