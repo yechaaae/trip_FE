@@ -226,9 +226,28 @@ const initMap = async () => {
 const goWriteReview = () => router.push(`/board/write?placeId=${contentId}`);
 
 const sharePlace = async () => {
-  await navigator.clipboard.writeText(window.location.href);
-  alert("링크가 복사되었습니다");
+  const shareUrl = window.location.href;
+  const shareText = `[모아봐] ${place.value.title}\n${shareUrl}`;
+
+  try {
+    if (navigator.clipboard && window.isSecureContext) {
+      await navigator.clipboard.writeText(shareText);
+      alert("관광지 링크가 복사되었습니다.");
+    } else {
+      // fallback
+      const textarea = document.createElement("textarea");
+      textarea.value = shareText;
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand("copy");
+      document.body.removeChild(textarea);
+      alert("관광지 링크가 복사되었습니다.");
+    }
+  } catch (e) {
+    alert("공유에 실패했습니다.");
+  }
 };
+
 
 /* ======================
    COMPUTED

@@ -20,15 +20,20 @@ export const getAttractionList = (
   pageNo = 1,
   numOfRows = 20
 ) => {
-  return api.get("/attraction/list", {
-    params: {
-      areaCode,
-      contentTypeId,
-      pageNo,
-      numOfRows,
-    },
-  });
+  const params = {
+    contentTypeId,
+    pageNo,
+    numOfRows,
+  };
+
+  // ⭐ 전체가 아닐 때만 areaCode 추가
+  if (areaCode !== null) {
+    params.areaCode = areaCode;
+  }
+
+  return api.get("/attraction/list", { params });
 };
+
 
 // ================================================================
 // 2) 관광지 상세 조회

@@ -128,8 +128,10 @@ const goDetail = (id) => router.push(`/place/${id}`);
 // ⭐ API 호출
 const fetchPlaces = async () => {
   try {
+    const areaCode = selectedArea.value.code;
+
     const { data } = await getAttractionList(
-      selectedArea.value.code,
+      areaCode, // null이면 전국
       selectedCategory.value.typeId,
       pageNo.value,
       numOfRows
