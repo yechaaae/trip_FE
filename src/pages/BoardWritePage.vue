@@ -111,26 +111,50 @@ const isSearched = ref(false);
    EDIT MODE LOAD
 ====================== */
 onMounted(async () => {
-  if (!isEditMode.value) return;
+  // CASE 1: 수정 모드일 때 (기존 글 불러오기)
+  if (isEditMode.value) {
+    try {
+      const { data } = await axios.get(`http://localhost:8080/api/board/${boardId}`, { withCredentials: true });
 
-  try {
-    const { data } = await axios.get(`http://localhost:8080/api/board/${boardId}`, { withCredentials: true });
+      title.value = data.title;
+      content.value = data.content;
+      rating.value = data.rating;
+      pageType.value = data.type;
 
-    title.value = data.title;
-    content.value = data.content;
-    rating.value = data.rating;
-    pageType.value = data.type;
-
-    if (data.contentId) {
-      selectedAttraction.value = {
-        contentId: data.contentId,
-        title: data.attractionTitle || "이전 선택 관광지",
-        addr1: "",
-      };
+      if (data.contentId) {
+        selectedAttraction.value = {
+          contentId: data.contentId,
+          title: data.attractionTitle || "이전 선택 관광지",
+          addr1: "",
+          // 수정 시 좌표 정보도 필요하면 불러와야 함 (없으면 null 처리)
+          latitude: data.latitude, 
+          longitude: data.longitude
+        };
+      }
+    } catch {
+      alert("기존 글 정보를 불러오지 못했습니다.");
+      router.push("/board");
     }
-  } catch {
-    alert("기존 글 정보를 불러오지 못했습니다.");
-    router.push("/board");
+  } 
+  
+  // CASE 2: 신규 작성이지만, 관광지 상세에서 '리뷰 쓰기'로 넘어왔을 때
+  else if (route.query.contentId) {
+    // URL 쿼리 파라미터(문자열)를 꺼내서 변환
+    const { contentId, title: qTitle, addr1, mapx, mapy } = route.query;
+
+    console.log("관광지 자동 선택:", qTitle); 
+
+    // 선택된 관광지 정보 세팅 (UI에 즉시 반영됨)
+    selectedAttraction.value = {
+      contentId: parseInt(contentId),
+      title: qTitle,
+      addr1: addr1,
+      latitude: parseFloat(mapy), // 카카오맵 mapy = 위도
+      longitude: parseFloat(mapx) // 카카오맵 mapx = 경도
+    };
+
+    // 제목 입력창에도 자동으로 이름 넣어주기
+    title.value = qTitle;
   }
 });
 
