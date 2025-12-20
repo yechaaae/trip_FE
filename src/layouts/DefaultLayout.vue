@@ -19,5 +19,6 @@ import NavBar from "@/components/NavBar.vue";
 }
 main {
   flex: 1;
+  padding-top: 52px; /* 네비바 높이 */
 }
 </style>
