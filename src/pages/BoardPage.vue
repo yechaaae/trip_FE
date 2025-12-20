@@ -8,65 +8,99 @@
     </div>
 
     <div class="top-controls">
-      <div class="search-box">
-        <input type="text" v-model="searchWord" @keyup.enter="getArticles" placeholder="검색어를 입력하세요..." />
-        <button @click="getArticles">검색</button>
+      <div class="search-box-wrapper">
+        <div class="search-box">
+          <input 
+            type="text" 
+            v-model="searchWord" 
+            @input="onSearchInput"
+            @keyup.enter="getArticles" 
+            placeholder="검색어를 입력하세요..." 
+          />
+          <button @click="getArticles">검색</button>
+        </div>
+        
+        <ul v-if="suggestions.length > 0 && showSuggestions" class="suggestions-list">
+          <li v-for="(item, index) in suggestions" :key="index" @click="selectSuggestion(item)">
+            🔍 {{ item }}
+          </li>
+        </ul>
       </div>
+
+      <div class="sort-group">
+        <select v-model="sortOrder" @change="getArticles">
+            <option value="latest">최신순</option>
+            <option value="views">조회수순</option>
+            <option value="comments">댓글순</option>
+            <option value="likes">좋아요순</option>
+        </select>
+      </div>
+
       <button class="write-btn" @click="goWrite">
         {{ currentType === 2 ? "✍️ 리뷰 작성하기" : "✍️ 글 작성하기" }}
       </button>
     </div>
 
-    <div v-if="currentType === 2" class="review-feed">
-      <div class="review-card" v-for="article in articles" :key="article.boardId" @click="goDetail(article.boardId)">
-        <h2 class="place">{{ article.title }}</h2>
+    <div @click="showSuggestions = false">
+      <div v-if="currentType === 2" class="review-feed">
+        <div class="review-card" v-for="article in articles" :key="article.boardId" @click="goDetail(article.boardId)">
+          <h2 class="place">{{ article.title }}</h2>
 
-        <img
-          v-if="article.saveFile"
-          :src="`http://localhost:8080/upload/${article.saveFile}`"
-          class="photo-img"
-          alt="리뷰 사진"
-        />
-        <div v-else class="photo-placeholder"></div>
+          <img
+            v-if="article.saveFile"
+            :src="`http://localhost:8080/upload/${article.saveFile}`"
+            class="photo-img"
+            alt="리뷰 사진"
+          />
+          <div v-else class="photo-placeholder"></div>
 
-        <div class="rating">⭐ {{ article.rating }} / 5.0</div>
-        <p class="content preview-text">
-          {{ article.content }}
-        </p>
+          <div class="rating">⭐ {{ article.rating }} / 5.0</div>
+          <p class="content preview-text">
+            {{ article.content }}
+          </p>
 
-        <div class="actions" @click.stop>
-          <button class="like-btn">❤️ {{ article.likeCount }}</button>
-          <button class="comment-btn">💬 {{ article.commentCount || 0 }}</button>
-          <span class="views">👀 {{ article.hit }}</span>
-          <span class="writer">by {{ article.nickName }}</span>
+          <div class="actions" @click.stop>
+            <button class="like-btn">❤️ {{ article.likeCount }}</button>
+            <button class="comment-btn">💬 {{ article.commentCount || 0 }}</button>
+            <span class="views">👀 {{ article.hit }}</span>
+            <span class="writer">
+            by {{ article.nickName }} · {{ article.registDate ? article.registDate.split(" ")[0] : "" }}
+            </span>
+          </div>
         </div>
       </div>
-    </div>
 
-    <div v-else class="free-board-list">
-      <table>
-        <thead>
-          <tr>
-            <th width="10%">번호</th>
-            <th width="50%">제목</th>
-            <th width="15%">작성자</th>
-            <th width="15%">작성일</th>
-            <th width="10%">조회</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="article in articles" :key="article.boardId" @click="goDetail(article.boardId)">
-            <td>{{ article.boardId }}</td>
-            <td class="title-td">{{ article.title }}</td>
-            <td>{{ article.nickName }}</td>
-            <td>{{ article.registDate ? article.registDate.split(" ")[0] : "" }}</td>
-            <td>{{ article.hit }}</td>
-          </tr>
-          <tr v-if="articles.length === 0">
-            <td colspan="5" class="empty-msg">작성된 글이 없습니다.</td>
-          </tr>
-        </tbody>
-      </table>
+      <div v-else class="free-board-list">
+        <table>
+          <thead>
+            <tr>
+              <th width="8%">번호</th>
+        <th width="40%">제목</th>
+        <th width="12%">작성자</th>
+        <th width="8%">좋아요</th>
+        <th width="8%">댓글</th>
+        <th width="14%">작성일</th>
+        <th width="10%">조회</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="article in articles" :key="article.boardId" @click="goDetail(article.boardId)">
+        <td>{{ article.boardId }}</td>
+        <td class="title-td">{{ article.title }}</td>
+        <td>{{ article.nickName }}</td>
+
+        <td>❤️ {{ article.likeCount }}</td>
+        <td>💬 {{ article.commentCount || 0 }}</td>
+
+        <td>{{ article.registDate ? article.registDate.split(" ")[0] : "" }}</td>
+        <td>{{ article.hit }}</td>
+      </tr>
+            <tr v-if="articles.length === 0">
+              <td colspan="5" class="empty-msg">작성된 글이 없습니다.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
   </div>
 </template>
@@ -81,6 +115,12 @@ const articles = ref([]);
 const currentType = ref(2); // 기본값 2 (리뷰 게시판)
 const searchWord = ref("");
 
+// 🔥 [추가된 변수] 정렬 및 자동완성 관련
+const sortOrder = ref("latest"); 
+const suggestions = ref([]);
+const showSuggestions = ref(false);
+let debounceTimer = null;
+
 // 목록 가져오기 (타입에 따라 조회)
 const getArticles = async () => {
   try {
@@ -88,9 +128,11 @@ const getArticles = async () => {
       params: {
         type: currentType.value,
         word: searchWord.value,
+        sort: sortOrder.value, // 🔥 [수정] 정렬 기준 추가 전송
       },
     });
     articles.value = data;
+    showSuggestions.value = false; // 검색 후 자동완성 닫기
   } catch (error) {
     console.error("목록 조회 실패", error);
   }
@@ -100,6 +142,34 @@ const getArticles = async () => {
 const changeTab = (type) => {
   currentType.value = type;
   searchWord.value = ""; // 탭 변경 시 검색어 초기화
+  sortOrder.value = "latest"; // 🔥 [추가] 탭 변경 시 정렬 초기화
+  getArticles();
+};
+
+// 🔥 [추가] 검색어 자동완성 로직 (Debounce)
+const onSearchInput = () => {
+  if (debounceTimer) clearTimeout(debounceTimer);
+
+  debounceTimer = setTimeout(async () => {
+    if (!searchWord.value.trim()) {
+      suggestions.value = [];
+      showSuggestions.value = false;
+      return;
+    }
+    try {
+      const { data } = await axios.get("http://localhost:8080/api/board/search", {
+        params: { keyword: searchWord.value }
+      });
+      suggestions.value = data;
+      showSuggestions.value = true;
+    } catch (e) { console.error(e); }
+  }, 300);
+};
+
+// 🔥 [추가] 추천 검색어 선택
+const selectSuggestion = (keyword) => {
+  searchWord.value = keyword;
+  showSuggestions.value = false;
   getArticles();
 };
 
@@ -162,6 +232,14 @@ onMounted(() => {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 20px;
+  gap: 10px; /* 요소 간 간격 추가 */
+}
+
+/* 🔥 [수정] 검색창 박스 + 자동완성 감싸기 */
+.search-box-wrapper {
+  position: relative; /* 자동완성 목록 기준점 */
+  display: flex;
+  flex-direction: column;
 }
 
 .search-box {
@@ -320,5 +398,49 @@ onMounted(() => {
 .empty-msg {
   padding: 40px !important;
   color: #999;
+}
+
+/* 🔥 [신규 스타일 추가] 정렬 & 자동완성 */
+
+.sort-group {
+  margin-left: auto; /* 정렬 버튼을 오른쪽으로 밀기 */
+}
+
+.sort-group select {
+  padding: 8px 12px;
+  border: 1px solid #d4d9e3;
+  border-radius: 6px;
+  background-color: white;
+  cursor: pointer;
+}
+
+.suggestions-list {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  width: 100%;
+  min-width: 200px;
+  background: white;
+  border: 1px solid #d4d9e3;
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  list-style: none;
+  padding: 0;
+  margin-top: 5px;
+  z-index: 999;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.suggestions-list li {
+  padding: 10px;
+  border-bottom: 1px solid #f1f1f1;
+  cursor: pointer;
+  background: white;
+}
+
+.suggestions-list li:hover {
+  background: #f0f8ff;
+  color: #0066ff;
 }
 </style>
