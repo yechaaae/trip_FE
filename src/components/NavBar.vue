@@ -1,11 +1,11 @@
 <template>
-  <header class="navbar">
+  <header class="navbar" :class="{ scrolled: isScrolled }">
     <nav class="nav-links">
       <div class="left">
-        <router-link to="/">홈</router-link>
-        <router-link to="/area">지역별 보기</router-link>
-        <router-link to="/board">게시판</router-link>
-        <router-link to="/ranking/review">명예의 전당</router-link>
+        <router-link to="/" class="nav-item">홈</router-link>
+        <router-link to="/area" class="nav-item">지역별 보기</router-link>
+        <router-link to="/board" class="nav-item">게시판</router-link>
+        <router-link to="/ranking/review" class="nav-item">명예의 전당</router-link>
       </div>
 
       <div class="right">
@@ -14,11 +14,10 @@
         </template>
 
         <template v-else>
-          <span class="welcome-msg"
-            ><b>{{ userInfo.nickName }}</b
-            >님 환영합니다!</span
-          >
-          <router-link to="/mypage">마이페이지</router-link>
+          <span class="welcome-msg">
+            <b>{{ userInfo.nickName }}</b>님 환영합니다!
+          </span>
+          <router-link to="/mypage" class="nav-item">마이페이지</router-link>
           <button @click="logout" class="logout-btn">로그아웃</button>
         </template>
       </div>
@@ -27,32 +26,39 @@
 </template>
 
 <script setup>
+import { ref, onMounted, onUnmounted } from "vue";
 import { useMemberStore } from "@/stores/memberStore";
 import { storeToRefs } from "pinia";
 import { useRouter } from "vue-router";
-import { api } from "@/api/axiosConfig"; // 백엔드 로그아웃 요청용
+import { api } from "@/api/axiosConfig";
 
 const router = useRouter();
 const memberStore = useMemberStore();
-
-// ✨ 스토어의 상태(userInfo)를 반응형으로 가져옵니다.
-// 이제 로그인/로그아웃 할 때마다 화면이 알아서 바뀝니다.
 const { userInfo } = storeToRefs(memberStore);
 const { clearLoginUser } = memberStore;
 
+/* ✅ 스크롤 상태 */
+const isScrolled = ref(false);
+
+const handleScroll = () => {
+  isScrolled.value = window.scrollY > 4;
+};
+
+onMounted(() => {
+  window.addEventListener("scroll", handleScroll);
+});
+
+onUnmounted(() => {
+  window.removeEventListener("scroll", handleScroll);
+});
+
+/* 로그아웃 */
 const logout = async () => {
   try {
-    // 1. 백엔드에 로그아웃 요청 (세션 삭제)
     await api.get("/user/logout");
-
-    // 2. 프론트엔드 스토어 초기화
     clearLoginUser();
-
-    alert("로그아웃 되었습니다.");
-    router.push("/"); // 메인으로 이동
-  } catch (error) {
-    console.error("로그아웃 실패:", error);
-    // 에러가 나도 일단 프론트 처리는 해주는 게 좋습니다.
+    router.push("/");
+  } catch (e) {
     clearLoginUser();
     router.push("/");
   }
@@ -60,20 +66,33 @@ const logout = async () => {
 </script>
 
 <style lang="scss" scoped>
-/* ================================
-   🔹 기존 스타일 유지 + 추가
-================================ */
 .navbar {
-  width: 100%;
-  height: 60px;
-  background: white;
-  border-bottom: 1px solid #e5e5e5;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+
+  height: 52px;
   display: flex;
   align-items: center;
-  padding: 0 24px;
-  box-sizing: border-box;
+
+  padding: 0 20px;
+  background-color: rgba(255, 255, 255, 0.95);
+
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.06);
+  z-index: 1000;
+
+  transition: background-color 0.25s ease, backdrop-filter 0.25s ease;
 }
 
+/* 스크롤 시 */
+.navbar.scrolled {
+  background-color: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(8px);
+}
+
+
+/* 내부 정렬 */
 .nav-links {
   width: 100%;
   display: flex;
@@ -83,63 +102,90 @@ const logout = async () => {
 
 .left {
   display: flex;
-  gap: 26px;
+  gap: 24px;
 }
 
 .right {
   display: flex;
   align-items: center;
-  gap: 18px;
+  gap: 16px;
 }
 
-.nav-links a {
+/* 메뉴 링크 */
+.nav-item {
+  position: relative;
   text-decoration: none;
   color: #333;
   font-weight: 600;
-  font-size: 16px;
-  transition: 0.2s;
+  font-size: 14px;
+  padding: 4px 0;
 }
 
-.nav-links a:hover {
-  color: #0066ff;
+.nav-item::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: -6px;
+  width: 0%;
+  height: 2px;
+  background-color: #2563eb;
+  transition: width 0.25s ease;
+}
+
+.nav-item:hover {
+  color: #2563eb;
+}
+
+.nav-item:hover::after {
+  width: 100%;
+}
+
+.nav-item.router-link-active {
+  color: #2563eb;
+}
+
+.nav-item.router-link-active::after {
+  width: 100%;
 }
 
 /* 로그인 버튼 */
 .login-btn {
-  padding: 8px 22px;
-  background: #f2f4ff;
-  color: #3a4a6b;
-  border-radius: 12px;
-  font-size: 15px;
-  font-weight: 600;
-  border: 1px solid #d6ddff;
+  padding: 8px 26px;
+  background: linear-gradient(135deg, #4f7cff, #2563eb);
+  color: #fff;
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 700;
+  text-decoration: none;
+  box-shadow: 0 3px 8px rgba(79, 124, 255, 0.35);
 }
+
 .login-btn:hover {
-  background: #4f7cff;
-  color: white;
-  border-color: #4f7cff;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 14px rgba(79, 124, 255, 0.45);
 }
 
-/* ✨ 추가된 스타일: 환영 메시지 */
+/* 환영 문구 */
 .welcome-msg {
-  font-size: 14px;
+  font-size: 13px;
   color: #555;
-  margin-right: 4px;
+  white-space: nowrap;
 }
 
-/* ✨ 추가된 스타일: 로그아웃 버튼 */
+/* 로그아웃 */
 .logout-btn {
-  padding: 6px 14px;
-  background: #e9ecef;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 14px;
-  color: #495057;
+  padding: 5px 14px;
+  background: transparent;
+  border-radius: 999px;
+  font-size: 13px;
   font-weight: 600;
-  transition: 0.2s;
+  color: #868e96;
+  border: 1px solid #dee2e6;
+  cursor: pointer;
 }
+
 .logout-btn:hover {
-  background: #dee2e6;
+  background: #f8f9fa;
+  color: #495057;
 }
 </style>
