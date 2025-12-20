@@ -6,6 +6,7 @@
         <router-link to="/area" class="nav-item">지역별 보기</router-link>
         <router-link to="/board" class="nav-item">게시판</router-link>
         <router-link to="/ranking/review" class="nav-item">명예의 전당</router-link>
+        <router-link to="/random" class="nav-item">무작위 여행</router-link>
       </div>
 
       <div class="right">
