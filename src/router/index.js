@@ -64,6 +64,13 @@ const routes = [
       },
     ],
   },
+
+  {
+  path: "/random",
+  name: "RandomPick",
+  component: () => import("@/pages/RandomPickPage.vue"),
+  },
+
 ];
 
 const router = createRouter({
