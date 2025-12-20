@@ -8,6 +8,21 @@
     </div>
 
     <div class="top-controls">
+      <div class="filter-dropdowns">
+    <select v-model="sidoCode" @change="getArticles">
+      <option :value="0">📍 전지역</option>
+      <option v-for="sido in sidos" :key="sido.code" :value="sido.code">
+        {{ sido.name }}
+      </option>
+    </select>
+
+    <select v-model="contentTypeId" @change="getArticles">
+      <option :value="0">🏷️ 모든 테마</option>
+      <option v-for="type in contentTypes" :key="type.code" :value="type.code">
+        {{ type.name }}
+      </option>
+    </select>
+    </div>
       <div class="search-box-wrapper">
         <div class="search-box">
           <input 
@@ -115,6 +130,27 @@ const articles = ref([]);
 const currentType = ref(2); // 기본값 2 (리뷰 게시판)
 const searchWord = ref("");
 
+// 🔥 [추가] 필터 관련 상태 변수
+const sidoCode = ref(0);      // 0이면 전체
+const contentTypeId = ref(0); // 0이면 전체
+
+// 🔥 [추가] 하드코딩된 데이터 리스트
+const sidos = [
+  { code: 1, name: "서울" }, { code: 2, name: "인천" }, { code: 3, name: "대전" },
+  { code: 4, name: "대구" }, { code: 5, name: "광주" }, { code: 6, name: "부산" },
+  { code: 7, name: "울산" }, { code: 8, name: "세종" }, { code: 31, name: "경기" },
+  { code: 32, name: "강원" }, { code: 33, name: "충북" }, { code: 34, name: "충남" },
+  { code: 35, name: "경북" }, { code: 36, name: "경남" }, { code: 37, name: "전북" },
+  { code: 38, name: "전남" }, { code: 39, name: "제주" },
+];
+
+const contentTypes = [
+  { code: 12, name: "관광지" }, { code: 14, name: "문화시설" }, { code: 15, name: "축제/공연" },
+  { code: 25, name: "여행코스" }, { code: 28, name: "레포츠" }, { code: 32, name: "숙박" },
+  { code: 38, name: "쇼핑" }, { code: 39, name: "음식점" },
+];
+
+
 // 🔥 [추가된 변수] 정렬 및 자동완성 관련
 const sortOrder = ref("latest"); 
 const suggestions = ref([]);
@@ -129,6 +165,9 @@ const getArticles = async () => {
         type: currentType.value,
         word: searchWord.value,
         sort: sortOrder.value, // 🔥 [수정] 정렬 기준 추가 전송
+
+        sido: sidoCode.value,
+        content: contentTypeId.value
       },
     });
     articles.value = data;
@@ -143,6 +182,9 @@ const changeTab = (type) => {
   currentType.value = type;
   searchWord.value = ""; // 탭 변경 시 검색어 초기화
   sortOrder.value = "latest"; // 🔥 [추가] 탭 변경 시 정렬 초기화
+
+  sidoCode.value = 0;
+  contentTypeId.value = 0;
   getArticles();
 };
 
@@ -442,5 +484,25 @@ onMounted(() => {
 .suggestions-list li:hover {
   background: #f0f8ff;
   color: #0066ff;
+}
+/* 🔥 [추가] 필터 드롭다운 스타일 */
+.filter-dropdowns {
+  display: flex;
+  gap: 8px;
+}
+
+.filter-dropdowns select {
+  padding: 8px 10px;
+  border: 1px solid #d4d9e3;
+  border-radius: 6px;
+  cursor: pointer;
+  background: white;
+  font-size: 14px;
+  min-width: 100px; /* 너무 작아지지 않게 최소 너비 설정 */
+}
+
+.filter-dropdowns select:focus {
+  border-color: #0066ff;
+  outline: none;
 }
 </style>
