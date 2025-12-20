@@ -223,7 +223,22 @@ const initMap = async () => {
 /* ======================
    ACTIONS
 ====================== */
-const goWriteReview = () => router.push(`/board/write?placeId=${contentId}`);
+const goWriteReview = () => {
+  // 데이터가 아직 로딩 안 됐으면 클릭 방지
+  if (!place.value) return;
+
+  router.push({
+    path: "/board/write",
+    query: {
+      type: 2,                  // 2: 리뷰 작성 모드
+      contentId: contentId,     // 관광지 고유 ID
+      title: place.value.title, // 관광지 이름 (제목 자동입력용)
+      addr1: place.value.addr1, // 주소 (정보 표시용)
+      mapx: place.value.mapx,   // 경도 (지도 표시용)
+      mapy: place.value.mapy    // 위도
+    },
+  });
+};
 
 const sharePlace = async () => {
   await navigator.clipboard.writeText(window.location.href);
