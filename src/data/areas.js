@@ -1,4 +1,9 @@
 export const areas = [
+  {
+    code: null,            
+    name: "전체",
+    icon: "/tmpimg.png" 
+  },
   { code: 1, name: "서울", icon: "/tmpimg.png" },
   { code: 2, name: "인천", icon: "/tmpimg.png" },
   { code: 3, name: "대전", icon: "/tmpimg.png" },
