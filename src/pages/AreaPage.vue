@@ -25,22 +25,44 @@
     <section class="place-list">
 
       <div class="title-row">
-        <h2>{{ selectedArea.name }}</h2>
+        <!-- ⬅ 왼쪽: 지역 + 카테고리 -->
+        <div class="title-left">
+          <h2>{{ selectedArea.name }}</h2>
 
-        <div class="category-box" @click="toggleDropdown">
-          {{ selectedCategory.label }}
-          <span class="arrow" :class="{ open: dropdownOpen }">⌄</span>
+          <div class="category-box" @click="toggleDropdown">
+            {{ selectedCategory.label }}
+            <span class="arrow" :class="{ open: dropdownOpen }">⌄</span>
+          </div>
+
+          <ul v-if="dropdownOpen" class="dropdown">
+            <li v-for="c in categories" :key="c.type" @click="selectCategory(c)">
+              {{ c.label }}
+            </li>
+          </ul>
         </div>
 
-        <ul v-if="dropdownOpen" class="dropdown">
-          <li
-            v-for="c in categories"
-            :key="c.type"
-            @click="selectCategory(c)"
-          >
-            {{ c.label }}
-          </li>
-        </ul>
+        <!-- ➡ 오른쪽: 검색 (A안: 아이콘 → 펼쳐짐) -->
+        <div class="title-right">
+          <!-- 🔍 아이콘 버튼 -->
+          <button v-if="!searchOpen" class="search-icon-btn" @click="openSearch">
+            <i class="fa-solid fa-magnifying-glass"></i>
+          </button>
+
+          <!-- 🔍 펼쳐지는 검색창 -->
+          <transition name="search-slide">
+            <div v-if="searchOpen" class="search-box">
+              <input
+                ref="searchInput"
+                type="text"
+                v-model="searchQuery"
+                placeholder="관광지 검색"
+                @keyup.enter="onSearch"
+                @blur="closeSearch"
+              />
+              <button @click="onSearch">검색</button>
+            </div>
+          </transition>
+        </div>
       </div>
 
       <!-- 🔹 추천 -->
@@ -103,6 +125,7 @@ import { ref, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import { areas } from "@/data/areas";
 import { getAttractionList } from "@/api/attraction";
+import { nextTick } from "vue"; 
 
 const router = useRouter();
 
@@ -112,6 +135,10 @@ const places = ref([]);
 const pageNo = ref(1);
 const totalCount = ref(0);
 const numOfRows = 20;
+const searchOpen = ref(false);
+const searchQuery = ref("");
+const searchInput = ref(null);
+
 
 // ⭐ 카테고리 목록
 const categories = [
@@ -131,11 +158,13 @@ const fetchPlaces = async () => {
     const areaCode = selectedArea.value.code;
 
     const { data } = await getAttractionList(
-      areaCode, // null이면 전국
+      selectedArea.value.code,
       selectedCategory.value.typeId,
       pageNo.value,
-      numOfRows
+      numOfRows,
+      searchQuery.value // 검색 위해 추가 
     );
+
 
     const body = data?.response?.body;
     const items = body?.items?.item;
@@ -156,6 +185,27 @@ const selectArea = (area) => {
   pageNo.value = 1;
   fetchPlaces();
 };
+
+// 🔍 아이콘 클릭 → 검색창 열기 + 포커스
+const openSearch = async () => {
+  searchOpen.value = true;
+  await nextTick();
+  searchInput.value?.focus();
+};
+
+// 🔍 blur(포커스 아웃) 시 닫기: 입력값 없을 때만 닫기
+const closeSearch = () => {
+  if (!searchQuery.value.trim()) {
+    searchOpen.value = false;
+  }
+};
+
+// 🔍 검색 실행
+const onSearch = () => {
+  pageNo.value = 1;  // 검색 시 첫 페이지로
+  fetchPlaces();
+};
+
 
 // ⭐ 카테고리 드롭다운
 const dropdownOpen = ref(false);
@@ -245,6 +295,7 @@ onMounted(() => {
 .title-row {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 14px;
   margin-bottom: 14px;
   position: relative;
@@ -253,6 +304,24 @@ onMounted(() => {
 .title-row h2 {
   font-size: 26px;
   font-weight: 700;
+}
+
+.title-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.title-left h2 {
+  font-size: 26px;
+  font-weight: 700;
+}
+
+.title-right {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+
 }
 
 .category-box {
@@ -389,6 +458,57 @@ onMounted(() => {
     font-size: 16px;
     font-weight: 600;
   }
+}
+
+/* 🔍 아이콘 버튼 */
+.search-icon-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  border: none;
+  background: #eef4ff;
+  cursor: pointer;
+  font-size: 16px;
+  color: #3d81ff;
+}
+
+/* 🔍 검색창 */
+.search-box {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+
+  input {
+    width: 220px;
+    height: 38px;
+    padding: 0 14px;
+    border-radius: 999px;
+    border: 1px solid #cfd6e6;
+    font-size: 15px;
+  }
+
+  button {
+    height: 38px;
+    padding: 0 16px;
+    border-radius: 999px;
+    border: none;
+    background: #3d81ff;
+    color: #fff;
+    font-size: 14px;
+    cursor: pointer;
+  }
+}
+
+/* ✨ 슬라이드 애니메이션 */
+.search-slide-enter-active,
+.search-slide-leave-active {
+  transition: all 0.25s ease;
+}
+
+.search-slide-enter-from,
+.search-slide-leave-to {
+  opacity: 0;
+  transform: translateX(16px);
 }
 
 </style>

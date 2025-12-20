@@ -75,12 +75,76 @@
       <p v-html="cleanOverview"></p>
     </section>
   </div>
+
+
+  <!-- REVIEWS -->
+  <section class="reviews-section">
+    <div class="reviews-header" @click="toggleReview">
+      <div class="left">
+        <h2>리뷰</h2>
+        <span class="count">{{ reviewStats.reviewCount }}</span>
+      </div>
+      <i :class="isReviewOpen ? 'fa-solid fa-chevron-up' : 'fa-solid fa-chevron-down'"></i>
+    </div>
+
+    <div v-if="isReviewOpen" class="reviews-body">
+      <!-- 정렬 -->
+      <div class="sort">
+        <button
+          :class="{ active: reviewSort === 'latest' }"
+          @click="reviewSort='latest'; fetchReviews({reset:true})"
+        >최신순</button>
+
+        <button
+          :class="{ active: reviewSort === 'rating' }"
+          @click="reviewSort='rating'; fetchReviews({reset:true})"
+        >별점순</button>
+
+        <button
+          :class="{ active: reviewSort === 'popular' }"
+          @click="reviewSort='popular'; fetchReviews({reset:true})"
+        >인기순</button>
+      </div>
+
+      <!-- 리뷰 없음 -->
+      <div v-if="reviews.length === 0 && !reviewLoading" class="empty">
+        아직 작성된 리뷰가 없습니다.
+      </div>
+
+      <!-- 리뷰 카드 -->
+      <div
+        v-for="r in reviews"
+        :key="r.boardId"
+        class="review-card"
+        @click="goReviewDetail(r.boardId)"
+      >
+        <div class="top">
+          <h3 class="title">{{ r.title }}</h3>
+          <span class="rating">⭐ {{ r.rating }}</span>
+        </div>
+
+        <div class="meta">
+          <span>{{ r.nickName }}</span>
+          <span class="dot">·</span>
+          <span>{{ r.registDate }}</span>
+        </div>
+      </div>
+
+      <!-- 더 보기 -->
+      <button
+        v-if="reviewPage < reviewTotalPages"
+        class="more-btn"
+        @click="loadMoreReviews"
+      >
+        더 보기
+      </button>
+    </div>
+  </section>
 </template>
 
 <script setup>
 import { ref, computed, onMounted, nextTick } from "vue";
 import { useRoute, useRouter } from "vue-router";
-import axios from "axios";
 
 import { Swiper, SwiperSlide } from "swiper/vue";
 import { Navigation, Pagination } from "swiper/modules";
@@ -90,6 +154,7 @@ import "swiper/css/pagination";
 
 import { getAttractionDetail, getAttractionImage } from "@/api/attraction";
 import { getReviewStats } from "@/api/board";
+import { getPlaceReviews } from "@/api/board";
 
 /* ======================
    BASIC SETUP
@@ -99,12 +164,6 @@ const router = useRouter();
 const contentId = route.params.id;
 const KAKAO_MAP_KEY = import.meta.env.VITE_KAKAO_MAP_KEY;
 
-/* axios (세션 포함) */
-const api = axios.create({
-  baseURL: "http://localhost:8080",
-  withCredentials: true,
-});
-
 /* ======================
    STATE
 ====================== */
@@ -113,6 +172,16 @@ const images = ref([]);
 const saved = ref(false);
 const bookmarkId = ref(null);
 
+
+//for review
+const isReviewOpen = ref(false);
+const reviews = ref([]);
+const reviewPage = ref(1);
+const reviewSize = ref(5);
+const reviewTotalPages = ref(0);
+const reviewTotalElements = ref(0);
+const reviewSort = ref("latest");
+const reviewLoading = ref(false);
 const reviewStats = ref({
   avgRating: 0,
   reviewCount: 0,
@@ -137,6 +206,40 @@ const fetchImages = async () => {
   }
 };
 
+//review 
+const fetchReviews = async ({ reset = false } = {}) => {
+  if (reviewLoading.value) return;
+  reviewLoading.value = true;
+
+  try {
+    if (reset) {
+      reviewPage.value = 1;
+      reviews.value = [];
+    }
+
+    const { data } = await getPlaceReviews(contentId, {
+      page: reviewPage.value,
+      size: reviewSize.value,
+      sort: reviewSort.value,
+    });
+
+    // 🔥 여기 중요 (PageResponse 기준)
+    reviewTotalPages.value = data.totalPages;
+    reviewTotalElements.value = data.totalElements;
+
+    if (reviewPage.value === 1) {
+      reviews.value = data.list;
+    } else {
+      reviews.value = [...reviews.value, ...data.list];
+    }
+
+  } catch (e) {
+    console.error("리뷰 불러오기 실패", e);
+  } finally {
+    reviewLoading.value = false;
+  }
+};
+
 const fetchReviewStats = async () => {
   const { data } = await getReviewStats(contentId);
   reviewStats.value = {
@@ -144,6 +247,26 @@ const fetchReviewStats = async () => {
     reviewCount: data.reviewCount ?? 0,
   };
 };
+
+const toggleReview = async () => {
+  isReviewOpen.value = !isReviewOpen.value;
+
+  if (isReviewOpen.value && reviews.value.length === 0) {
+    await fetchReviews({ reset: true });
+  }
+};
+
+const loadMoreReviews = async () => {
+  if (reviewPage.value >= reviewTotalPages.value) return;
+  reviewPage.value += 1;
+  await fetchReviews();
+};
+
+
+const goReviewDetail = (boardId) => {
+  router.push(`/board/${boardId}`);
+};
+
 
 /* ======================
    BOOKMARK
@@ -325,4 +448,127 @@ onMounted(async () => {
   height: 360px;
   border-radius: 14px;
 }
+
+/* ======================
+   REVIEWS
+====================== */
+
+.reviews-section {
+  max-width: 1100px;
+  margin: 40px auto 0;
+  border: 1px solid #eee;
+  border-radius: 16px;
+  background: #fff;
+  overflow: hidden;
+}
+
+.reviews-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 18px 20px;
+  cursor: pointer;
+  border-bottom: 1px solid #eee;
+
+  h2 {
+    font-size: 20px;
+    font-weight: 800;
+    margin: 0;
+  }
+
+  .count {
+    margin-left: 8px;
+    font-size: 14px;
+    color: #666;
+  }
+
+  .left {
+    display: flex;
+    align-items: center;
+  }
+}
+
+.reviews-body {
+  padding: 20px;
+}
+
+.sort {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+
+  button {
+    padding: 8px 14px;
+    border-radius: 999px;
+    border: 1px solid #ddd;
+    background: #fff;
+    cursor: pointer;
+    font-size: 13px;
+
+    &.active {
+      border-color: #2b7cff;
+      color: #2b7cff;
+      font-weight: 700;
+    }
+  }
+}
+
+.empty {
+  padding: 20px 0;
+  color: #777;
+  text-align: center;
+}
+
+.review-card {
+  border: 1px solid #eee;
+  border-radius: 14px;
+  padding: 16px;
+  margin-bottom: 12px;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0,0,0,0.06);
+  }
+
+  .top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    .title {
+      font-size: 16px;
+      font-weight: 800;
+      margin: 0;
+    }
+
+    .rating {
+      font-size: 14px;
+      color: #444;
+    }
+  }
+
+  .meta {
+    margin-top: 8px;
+    font-size: 13px;
+    color: #777;
+
+    .dot {
+      margin: 0 6px;
+    }
+  }
+}
+
+.more-btn {
+  width: 100%;
+  margin-top: 16px;
+  padding: 12px;
+  border-radius: 12px;
+  border: 1px solid #eee;
+  background: #fff;
+  font-weight: 700;
+  cursor: pointer;
+}
+
 </style>
