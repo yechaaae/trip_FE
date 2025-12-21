@@ -18,7 +18,12 @@
       <button>👀 조회수 {{ post.hit }}</button>
       <button>💬 댓글 {{ post.commentCount || 0 }}</button>
     </div>
-
+    <div class="actions">
+  <span class="writer" @click="goToProfile(post.userId)" style="cursor: pointer;">
+    by {{ post.nickName }}
+  </span>
+  <span class="date">· {{ post.registDate }}</span>
+</div>
     <div class="owner-actions" v-if="userInfo && userInfo.userId === post.userId">
       <button class="edit-btn" @click="goModify">수정</button>
       <button class="delete-btn" @click="deleteArticle">삭제</button>
@@ -124,6 +129,13 @@ const fetchPostDetail = async (shouldUpdateHit = true) => {
   } catch (error) {
     console.error("상세 조회 실패", error);
   }
+};
+
+const goToProfile = (userId) => {
+  // 내 페이지면 /mypage, 남이면 /mypage/그사람ID (라우터 설정에 따라 다름)
+  // 가장 쉬운 방법은 라우터를 통일하는 것입니다.
+  // router/index.js에 { path: '/user/:userId', component: MyPage } 설정 추천
+  router.push(`/user/${userId}`);
 };
 </script>
 
