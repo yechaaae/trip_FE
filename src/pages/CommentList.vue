@@ -10,6 +10,7 @@
       ></textarea>
       <button class="regist-btn" @click="submitComment(null)" :disabled="!newComment.trim()">등록</button>
     </div>
+    
 
     <ul class="comment-list">
       <li v-for="comment in comments" :key="comment.commentId" class="comment-item">

@@ -43,10 +43,15 @@ watch(() => props.isVisible, async (newVal) => {
   }
 });
 
+// src/components/FollowModal.vue (또는 pages/FollowModal.vue)
+
 const fetchList = async () => {
   try {
-    // 백엔드 API 호출: GET /follow/list/{type}/{userId}
-    const response = await axios.get(`http://localhost:8080/follow/list/${props.type}/${props.userId}`);
+    
+    const response = await axios.get(
+      `http://localhost:8080/follow/list/${props.type}/${props.userId}`,
+      { withCredentials: true } 
+    );
     userList.value = response.data;
   } catch (error) {
     console.error("목록 불러오기 실패:", error);
