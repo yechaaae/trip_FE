@@ -3,40 +3,55 @@
     <h1>{{ currentType === 2 ? "여행 후기" : "자유 게시판" }}</h1>
 
     <div class="tab-menu">
-      <button :class="{ active: currentType === 2 }" @click="changeTab(2)">📸 여행 후기</button>
-      <button :class="{ active: currentType === 1 }" @click="changeTab(1)">🗣️ 자유 게시판</button>
+      <button :class="{ active: currentType === 2 }" @click="changeTab(2)">
+        📸 여행 후기
+      </button>
+      <button :class="{ active: currentType === 1 }" @click="changeTab(1)">
+        🗣️ 자유 게시판
+      </button>
     </div>
 
     <div class="top-controls">
       <div class="filter-dropdowns">
-    <select v-model="sidoCode" @change="getArticles">
-      <option :value="0">📍 전지역</option>
-      <option v-for="sido in sidos" :key="sido.code" :value="sido.code">
-        {{ sido.name }}
-      </option>
-    </select>
+        <select v-model="sidoCode" @change="getArticles">
+          <option :value="0">📍 전지역</option>
+          <option v-for="sido in sidos" :key="sido.code" :value="sido.code">
+            {{ sido.name }}
+          </option>
+        </select>
 
-    <select v-model="contentTypeId" @change="getArticles">
-      <option :value="0">🏷️ 모든 테마</option>
-      <option v-for="type in contentTypes" :key="type.code" :value="type.code">
-        {{ type.name }}
-      </option>
-    </select>
-    </div>
+        <select v-model="contentTypeId" @change="getArticles">
+          <option :value="0">🏷️ 모든 테마</option>
+          <option
+            v-for="type in contentTypes"
+            :key="type.code"
+            :value="type.code"
+          >
+            {{ type.name }}
+          </option>
+        </select>
+      </div>
       <div class="search-box-wrapper">
         <div class="search-box">
-          <input 
-            type="text" 
-            v-model="searchWord" 
+          <input
+            type="text"
+            v-model="searchWord"
             @input="onSearchInput"
-            @keyup.enter="getArticles" 
-            placeholder="검색어를 입력하세요..." 
+            @keyup.enter="getArticles"
+            placeholder="검색어를 입력하세요..."
           />
           <button @click="getArticles">검색</button>
         </div>
-        
-        <ul v-if="suggestions.length > 0 && showSuggestions" class="suggestions-list">
-          <li v-for="(item, index) in suggestions" :key="index" @click="selectSuggestion(item)">
+
+        <ul
+          v-if="suggestions.length > 0 && showSuggestions"
+          class="suggestions-list"
+        >
+          <li
+            v-for="(item, index) in suggestions"
+            :key="index"
+            @click="selectSuggestion(item)"
+          >
             🔍 {{ item }}
           </li>
         </ul>
@@ -44,10 +59,10 @@
 
       <div class="sort-group">
         <select v-model="sortOrder" @change="getArticles">
-            <option value="latest">최신순</option>
-            <option value="views">조회수순</option>
-            <option value="comments">댓글순</option>
-            <option value="likes">좋아요순</option>
+          <option value="latest">최신순</option>
+          <option value="views">조회수순</option>
+          <option value="comments">댓글순</option>
+          <option value="likes">좋아요순</option>
         </select>
       </div>
 
@@ -58,7 +73,12 @@
 
     <div @click="showSuggestions = false">
       <div v-if="currentType === 2" class="review-feed">
-        <div class="review-card" v-for="article in articles" :key="article.boardId" @click="goDetail(article.boardId)">
+        <div
+          class="review-card"
+          v-for="article in articles"
+          :key="article.boardId"
+          @click="goDetail(article.boardId)"
+        >
           <h2 class="place">{{ article.title }}</h2>
 
           <img
@@ -76,10 +96,19 @@
 
           <div class="actions" @click.stop>
             <button class="like-btn">❤️ {{ article.likeCount }}</button>
-            <button class="comment-btn">💬 {{ article.commentCount || 0 }}</button>
+            <button class="comment-btn">
+              💬 {{ article.commentCount || 0 }}
+            </button>
             <span class="views">👀 {{ article.hit }}</span>
             <span class="writer">
-            by {{ article.nickName }} · {{ article.registDate ? article.registDate.split(" ")[0] : "" }}
+              by
+              <span
+                class="nickname-link"
+                @click.stop="goProfile(article.userId)"
+              >
+                {{ article.nickName }}
+              </span>
+              · {{ article.registDate ? article.registDate.split(" ")[0] : "" }}
             </span>
           </div>
         </div>
@@ -90,26 +119,37 @@
           <thead>
             <tr>
               <th width="8%">번호</th>
-        <th width="40%">제목</th>
-        <th width="12%">작성자</th>
-        <th width="8%">좋아요</th>
-        <th width="8%">댓글</th>
-        <th width="14%">작성일</th>
-        <th width="10%">조회</th>
+              <th width="40%">제목</th>
+              <th width="12%">작성자</th>
+              <th width="8%">좋아요</th>
+              <th width="8%">댓글</th>
+              <th width="14%">작성일</th>
+              <th width="10%">조회</th>
             </tr>
           </thead>
           <tbody>
-            <tr v-for="article in articles" :key="article.boardId" @click="goDetail(article.boardId)">
-        <td>{{ article.boardId }}</td>
-        <td class="title-td">{{ article.title }}</td>
-        <td>{{ article.nickName }}</td>
+            <tr
+              v-for="article in articles"
+              :key="article.boardId"
+              @click="goDetail(article.boardId)"
+            >
+              <td>{{ article.boardId }}</td>
+              <td class="title-td">{{ article.title }}</td>
+              <td
+                @click.stop="goProfile(article.userId)"
+                class="clickable-writer"
+              >
+                {{ article.nickName }}
+              </td>
 
-        <td>❤️ {{ article.likeCount }}</td>
-        <td>💬 {{ article.commentCount || 0 }}</td>
+              <td>❤️ {{ article.likeCount }}</td>
+              <td>💬 {{ article.commentCount || 0 }}</td>
 
-        <td>{{ article.registDate ? article.registDate.split(" ")[0] : "" }}</td>
-        <td>{{ article.hit }}</td>
-      </tr>
+              <td>
+                {{ article.registDate ? article.registDate.split(" ")[0] : "" }}
+              </td>
+              <td>{{ article.hit }}</td>
+            </tr>
             <tr v-if="articles.length === 0">
               <td colspan="5" class="empty-msg">작성된 글이 없습니다.</td>
             </tr>
@@ -131,28 +171,43 @@ const currentType = ref(2); // 기본값 2 (리뷰 게시판)
 const searchWord = ref("");
 
 // 🔥 [추가] 필터 관련 상태 변수
-const sidoCode = ref(0);      // 0이면 전체
+const sidoCode = ref(0); // 0이면 전체
 const contentTypeId = ref(0); // 0이면 전체
 
 // 🔥 [추가] 하드코딩된 데이터 리스트
 const sidos = [
-  { code: 1, name: "서울" }, { code: 2, name: "인천" }, { code: 3, name: "대전" },
-  { code: 4, name: "대구" }, { code: 5, name: "광주" }, { code: 6, name: "부산" },
-  { code: 7, name: "울산" }, { code: 8, name: "세종" }, { code: 31, name: "경기" },
-  { code: 32, name: "강원" }, { code: 33, name: "충북" }, { code: 34, name: "충남" },
-  { code: 35, name: "경북" }, { code: 36, name: "경남" }, { code: 37, name: "전북" },
-  { code: 38, name: "전남" }, { code: 39, name: "제주" },
+  { code: 1, name: "서울" },
+  { code: 2, name: "인천" },
+  { code: 3, name: "대전" },
+  { code: 4, name: "대구" },
+  { code: 5, name: "광주" },
+  { code: 6, name: "부산" },
+  { code: 7, name: "울산" },
+  { code: 8, name: "세종" },
+  { code: 31, name: "경기" },
+  { code: 32, name: "강원" },
+  { code: 33, name: "충북" },
+  { code: 34, name: "충남" },
+  { code: 35, name: "경북" },
+  { code: 36, name: "경남" },
+  { code: 37, name: "전북" },
+  { code: 38, name: "전남" },
+  { code: 39, name: "제주" },
 ];
 
 const contentTypes = [
-  { code: 12, name: "관광지" }, { code: 14, name: "문화시설" }, { code: 15, name: "축제/공연" },
-  { code: 25, name: "여행코스" }, { code: 28, name: "레포츠" }, { code: 32, name: "숙박" },
-  { code: 38, name: "쇼핑" }, { code: 39, name: "음식점" },
+  { code: 12, name: "관광지" },
+  { code: 14, name: "문화시설" },
+  { code: 15, name: "축제/공연" },
+  { code: 25, name: "여행코스" },
+  { code: 28, name: "레포츠" },
+  { code: 32, name: "숙박" },
+  { code: 38, name: "쇼핑" },
+  { code: 39, name: "음식점" },
 ];
 
-
 // 🔥 [추가된 변수] 정렬 및 자동완성 관련
-const sortOrder = ref("latest"); 
+const sortOrder = ref("latest");
 const suggestions = ref([]);
 const showSuggestions = ref(false);
 let debounceTimer = null;
@@ -167,13 +222,19 @@ const getArticles = async () => {
         sort: sortOrder.value, // 🔥 [수정] 정렬 기준 추가 전송
 
         sido: sidoCode.value,
-        content: contentTypeId.value
+        content: contentTypeId.value,
       },
     });
     articles.value = data;
     showSuggestions.value = false; // 검색 후 자동완성 닫기
   } catch (error) {
     console.error("목록 조회 실패", error);
+  }
+};
+
+const goProfile = (userId) => {
+  if (userId) {
+    router.push(`/user/${userId}`);
   }
 };
 
@@ -199,12 +260,17 @@ const onSearchInput = () => {
       return;
     }
     try {
-      const { data } = await axios.get("http://localhost:8080/api/board/search", {
-        params: { keyword: searchWord.value }
-      });
+      const { data } = await axios.get(
+        "http://localhost:8080/api/board/search",
+        {
+          params: { keyword: searchWord.value },
+        }
+      );
       suggestions.value = data;
       showSuggestions.value = true;
-    } catch (e) { console.error(e); }
+    } catch (e) {
+      console.error(e);
+    }
   }, 300);
 };
 
@@ -465,7 +531,7 @@ onMounted(() => {
   background: white;
   border: 1px solid #d4d9e3;
   border-radius: 6px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   list-style: none;
   padding: 0;
   margin-top: 5px;
@@ -504,5 +570,13 @@ onMounted(() => {
 .filter-dropdowns select:focus {
   border-color: #0066ff;
   outline: none;
+}
+
+.nickname-link:hover,
+.clickable-writer:hover {
+  color: #0066ff; /* 파란색 강조 */
+  text-decoration: underline;
+  cursor: pointer;
+  font-weight: bold;
 }
 </style>

@@ -1,10 +1,23 @@
 <template>
   <div class="mypage-container">
     <aside class="profile-section">
-      <div class="avatar" :style="user.profileImg ? { backgroundImage: `url(${user.profileImg})` } : {}"></div>
+      <div
+        class="avatar"
+        :style="
+          user.profileImg ? { backgroundImage: `url(${user.profileImg})` } : {}
+        "
+      ></div>
 
       <h2 class="nickname">{{ user.nickname }}</h2>
-      <p class="bio">{{ user.bio || "자기소개를 입력해주세요." }}</p>
+      <p class="bio">
+        <span v-if="user.bio">{{ user.bio }}</span>
+
+        <span v-else style="color: #999">
+          {{
+            isOtherUser ? "자기소개가 없습니다." : "자기소개를 입력해주세요."
+          }}
+        </span>
+      </p>
 
       <div class="stats">
         <div class="stat clickable" @click="openModal('following')">
@@ -23,36 +36,42 @@
         </div>
       </div>
 
-      <div style="width: 100%; margin-top: 15px;">
+      <div style="width: 100%; margin-top: 15px">
         <button v-if="!isOtherUser" class="edit-btn" @click="goProfileEdit">
           프로필 설정
         </button>
 
-        <button 
-          v-else 
-          class="follow-btn" 
-          :class="{ following: isFollowing }" 
+        <button
+          v-else
+          class="follow-btn"
+          :class="{ following: isFollowing }"
           @click="toggleFollow"
         >
-          {{ isFollowing ? '팔로잉' : '팔로우' }}
+          {{ isFollowing ? "팔로잉" : "팔로우" }}
         </button>
       </div>
     </aside>
 
     <section class="content-section">
       <div class="tabs">
-        <div 
-          :class="['tab', { active: tab === 'myReviews' }]" 
+        <div
+          :class="['tab', { active: tab === 'myReviews' }]"
           @click="tab = 'myReviews'"
         >
-          {{ isOtherUser ? '작성한 리뷰' : '내 리뷰 관리' }}
+          {{ isOtherUser ? "작성한 리뷰" : "내 리뷰 관리" }}
         </div>
 
         <template v-if="!isOtherUser">
-          <div :class="['tab', { active: tab === 'likedReviews' }]" @click="tab = 'likedReviews'">
+          <div
+            :class="['tab', { active: tab === 'likedReviews' }]"
+            @click="tab = 'likedReviews'"
+          >
             좋아요 한 리뷰
           </div>
-          <div :class="['tab', { active: tab === 'savedPlaces' }]" @click="tab = 'savedPlaces'">
+          <div
+            :class="['tab', { active: tab === 'savedPlaces' }]"
+            @click="tab = 'savedPlaces'"
+          >
             저장한 관광지
           </div>
         </template>
@@ -60,31 +79,61 @@
 
       <div class="tab-content">
         <div v-if="tab === 'myReviews'">
-          <div v-if="myReviews.length === 0" style="color: #888; text-align: center; padding: 20px">
+          <div
+            v-if="myReviews.length === 0"
+            style="color: #888; text-align: center; padding: 20px"
+          >
             작성한 리뷰가 없습니다.
           </div>
           <div
             v-for="review in myReviews"
             :key="review.boardId"
             @click="router.push(`/board/${review.boardId}`)"
-            style="display: flex; gap: 15px; border-bottom: 1px solid #eee; padding: 15px 0; cursor: pointer"
+            style="
+              display: flex;
+              gap: 15px;
+              border-bottom: 1px solid #eee;
+              padding: 15px 0;
+              cursor: pointer;
+            "
           >
             <img
               v-if="review.saveFile"
-              :src="`http://localhost:8080/upload/${review.saveFile}`"
-              style="width: 100px; height: 75px; object-fit: cover; border-radius: 6px; background: #eee"
+              :src="getImageUrl(review.saveFile)"
+              style="
+                width: 100px;
+                height: 75px;
+                object-fit: cover;
+                border-radius: 6px;
+                background: #eee;
+              "
             />
             <div
               v-else
-              style="width: 100px; height: 75px; background: #f0f0f0; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 12px; color: #aaa;"
+              style="
+                width: 100px;
+                height: 75px;
+                background: #f0f0f0;
+                border-radius: 6px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 12px;
+                color: #aaa;
+              "
             >
               이미지 없음
             </div>
 
             <div style="flex: 1">
-              <h4 style="margin: 0 0 6px 0; font-size: 16px">{{ review.title }}</h4>
+              <h4 style="margin: 0 0 6px 0; font-size: 16px">
+                {{ review.title }}
+              </h4>
               <div style="font-size: 13px; color: #666; margin-bottom: 4px">
-                <span style="color: #f39c12; font-weight: bold">⭐ {{ review.rating }}</span> &nbsp;|&nbsp; 조회수 {{ review.hit }}
+                <span style="color: #f39c12; font-weight: bold"
+                  >⭐ {{ review.rating }}</span
+                >
+                &nbsp;|&nbsp; 조회수 {{ review.hit }}
               </div>
               <div style="font-size: 12px; color: #999">
                 {{ review.registDate ? review.registDate.split(" ")[0] : "" }}
@@ -94,67 +143,137 @@
         </div>
 
         <div v-if="tab === 'likedReviews' && !isOtherUser">
-          <div v-if="likedReviews.length === 0" style="color: #888; text-align: center; padding: 20px">
+          <div
+            v-if="likedReviews.length === 0"
+            style="color: #888; text-align: center; padding: 20px"
+          >
             좋아요 한 리뷰가 없습니다.
           </div>
           <div
             v-for="review in likedReviews"
             :key="review.boardId"
             @click="router.push(`/board/${review.boardId}`)"
-            style="display: flex; gap: 15px; border-bottom: 1px solid #eee; padding: 15px 0; cursor: pointer"
+            style="
+              display: flex;
+              gap: 15px;
+              border-bottom: 1px solid #eee;
+              padding: 15px 0;
+              cursor: pointer;
+            "
           >
             <img
               v-if="review.saveFile"
-              :src="`http://localhost:8080/upload/${review.saveFile}`"
-              style="width: 100px; height: 75px; object-fit: cover; border-radius: 6px; background: #eee"
+              :src="getImageUrl(review.saveFile)"
+              style="
+                width: 100px;
+                height: 75px;
+                object-fit: cover;
+                border-radius: 6px;
+                background: #eee;
+              "
             />
             <div
               v-else
-              style="width: 100px; height: 75px; background: #f0f0f0; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 12px; color: #aaa;"
+              style="
+                width: 100px;
+                height: 75px;
+                background: #f0f0f0;
+                border-radius: 6px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 12px;
+                color: #aaa;
+              "
             >
               이미지 없음
             </div>
             <div style="flex: 1">
-              <h4 style="margin: 0 0 6px 0; font-size: 16px">{{ review.title }}</h4>
+              <h4 style="margin: 0 0 6px 0; font-size: 16px">
+                {{ review.title }}
+              </h4>
               <div style="font-size: 13px; color: #666; margin-bottom: 4px">
-                <span style="color: #f39c12; font-weight: bold">⭐ {{ review.rating }}</span>
-                &nbsp;|&nbsp; ❤️ {{ review.likeCount }} &nbsp;|&nbsp; {{ review.nickName }}
+                <span style="color: #f39c12; font-weight: bold"
+                  >⭐ {{ review.rating }}</span
+                >
+                &nbsp;|&nbsp; ❤️ {{ review.likeCount }} &nbsp;|&nbsp;
+                {{ review.nickName }}
               </div>
             </div>
           </div>
         </div>
 
         <div v-if="tab === 'savedPlaces' && !isOtherUser">
-          <div v-if="savedPlaces.length === 0" style="color: #888; text-align: center; padding: 20px">
+          <div
+            v-if="savedPlaces.length === 0"
+            style="color: #888; text-align: center; padding: 20px"
+          >
             저장한 관광지가 없습니다.
           </div>
           <div
             v-for="place in savedPlaces"
             :key="place.bookmarkId"
             @click="router.push(`/attraction/${place.contentId}`)"
-            style="display: flex; gap: 15px; border-bottom: 1px solid #eee; padding: 15px 0; cursor: pointer"
+            style="
+              display: flex;
+              gap: 15px;
+              border-bottom: 1px solid #eee;
+              padding: 15px 0;
+              cursor: pointer;
+            "
           >
             <img
               v-if="place.firstImage"
               :src="place.firstImage"
-              style="width: 80px; height: 80px; object-fit: cover; border-radius: 50%; border: 1px solid #eee"
+              style="
+                width: 80px;
+                height: 80px;
+                object-fit: cover;
+                border-radius: 50%;
+                border: 1px solid #eee;
+              "
             />
             <div
               v-else
-              style="width: 80px; height: 80px; background: #f0f0f0; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; color: #aaa;"
+              style="
+                width: 80px;
+                height: 80px;
+                background: #f0f0f0;
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 12px;
+                color: #aaa;
+              "
             >
               No Image
             </div>
-            <div style="display: flex; flex-direction: column; justify-content: center">
-              <h4 style="margin: 0 0 5px 0; font-size: 16px">{{ place.title }}</h4>
-              <p style="margin: 0; font-size: 13px; color: #666">📍 {{ place.addr1 }}</p>
+            <div
+              style="
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+              "
+            >
+              <h4 style="margin: 0 0 5px 0; font-size: 16px">
+                {{ place.title }}
+              </h4>
+              <p style="margin: 0; font-size: 13px; color: #666">
+                📍 {{ place.addr1 }}
+              </p>
             </div>
           </div>
         </div>
       </div>
     </section>
 
-    <FollowModal :isVisible="showModal" :type="modalType" :userId="user.userId" @close="showModal = false" />
+    <FollowModal
+      :isVisible="showModal"
+      :type="modalType"
+      :userId="user.userId"
+      @close="showModal = false"
+    />
   </div>
 </template>
 
@@ -175,7 +294,7 @@ const isOtherUser = ref(false);
 const router = useRouter();
 
 const isFollowing = ref(false); // 팔로우 중인지 여부
-const mySessionId = ref("");    // 로그인한 내 ID (비교용)
+const mySessionId = ref(""); // 로그인한 내 ID (비교용)
 // 모달 관련 상태
 const showModal = ref(false);
 const modalType = ref("follower");
@@ -207,9 +326,30 @@ onMounted(async () => {
 });
 
 // 다른 사용자 페이지 이동 시에도 재로딩
-watch(() => route.params.userId, () => {
-  loadPage();
-});
+watch(
+  () => route.params.userId,
+  () => {
+    loadPage();
+  }
+);
+
+// 이미지 경로
+const getImageUrl = (path) => {
+  if (!path) return "";
+
+  // 1. 외부 링크(http로 시작)면 그대로 반환
+  if (path.startsWith("http")) return path;
+
+  // 2. 경로에 이미 /upload가 포함된 경우 (UserDto 프로필 이미지 등)
+  if (path.startsWith("/upload")) {
+    return `http://localhost:8080${path}`;
+  }
+
+  // 3. 파일명만 있는 경우 (BoardDto 리뷰 이미지 등)
+  // 경로가 '/'로 시작하지 않으면 붙여줌
+  const cleanPath = path.startsWith("/") ? path : `/${path}`;
+  return `http://localhost:8080/upload${cleanPath}`;
+};
 
 // 내/타인 구분
 const loadPage = async () => {
@@ -219,28 +359,28 @@ const loadPage = async () => {
   if (!paramId || paramId === mySessionId.value) {
     isOtherUser.value = false;
     user.value.userId = mySessionId.value; // 내 ID로 설정
-    
-    await fetchMyInfo();       // 내 정보
+
+    await fetchMyInfo(); // 내 정보
     await fetchFollowCounts(user.value.userId);
-    await fetchMyActivity();   // 내 활동 내역(리뷰, 좋아요, 저장)
-  } 
+    await fetchMyActivity(); // 내 활동 내역(리뷰, 좋아요, 저장)
+  }
   // 파라미터가 있고 내 ID와 다르면 => "타인 페이지"
   else {
     isOtherUser.value = true;
     user.value.userId = paramId;
-    tab.value = "myReviews";   // 탭 초기화 (리뷰만 볼 수 있으므로)
+    tab.value = "myReviews"; // 탭 초기화 (리뷰만 볼 수 있으므로)
 
     await fetchOtherUserInfo(paramId); // 타인 정보 API 호출
-    await fetchFollowCounts(paramId);  // 타인 팔로우 수
-    await checkFollowStatus(paramId);  // [중요] 팔로우 여부 확인
-    
+    await fetchFollowCounts(paramId); // 타인 팔로우 수
+    await checkFollowStatus(paramId); // [중요] 팔로우 여부 확인
+
     // 타인의 작성 글 가져오기 (기존 API에 파라미터를 추가하거나 별도 API 필요)
-    // 예시: await fetchOtherReviews(paramId); 
+    // 예시: await fetchOtherReviews(paramId);
     // 임시로 내 리뷰 변수를 비움
     await fetchOtherReviews(paramId);
     likedReviews.value = [];
     savedPlaces.value = [];
-    
+
     // ※ 백엔드에 '타인 작성글 조회' API가 있다면 여기서 호출해서 myReviews에 넣어주세요.
     // 예: axios.get(`/api/board/user/${paramId}`)
   }
@@ -298,7 +438,10 @@ const fetchMyInfo = async () => {
     const res = await api.get("/user/info");
     setUserInfo(res.data);
   } catch (error) {
-    if (error.response && (error.response.status === 401 || error.response.status === 204)) {
+    if (
+      error.response &&
+      (error.response.status === 401 || error.response.status === 204)
+    ) {
       alert("로그인이 필요합니다.");
       router.push("/login");
     } else {
@@ -312,6 +455,7 @@ const fetchOtherUserInfo = async (userId) => {
   try {
     const res = await api.get(`/user/info/${userId}`);
     setUserInfo(res.data);
+    console.log("타인 정보 응답 데이터:", res.data);
   } catch (error) {
     console.error("타인 프로필 조회 실패:", error);
   }
@@ -322,9 +466,13 @@ const setUserInfo = (userInfo) => {
   user.value.userId = userInfo.userId;
   user.value.nickname = userInfo.nickName;
   user.value.email = userInfo.email || "";
+
+  // 백엔드 DTO는 introduction, 프론트는 bio로 사용 중
   user.value.bio = userInfo.introduction || "";
 
-  user.value.profileImg = userInfo.profileImg ? `http://localhost:8080${userInfo.profileImg}` : "";
+  // 이미지 처리 (위에서 만든 함수 사용)
+  // DTO에 profileImg가 있으면 쓰고, 없으면 saveFile(혹시 모를 호환성) 확인
+  user.value.profileImg = getImageUrl(userInfo.profileImg || userInfo.saveFile);
 };
 
 // 팔로우 카운트

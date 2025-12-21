@@ -1,7 +1,7 @@
 <template>
-  <div 
-    class="user-hover-wrapper" 
-    @mouseenter="show = true" 
+  <div
+    class="user-hover-wrapper"
+    @mouseenter="show = true"
     @mouseleave="show = false"
     @click.stop="goProfile"
   >
@@ -9,20 +9,25 @@
 
     <transition name="fade">
       <div v-if="show" class="mini-profile-tooltip">
-        
         <div class="profile-header">
-          <div 
-            class="mini-avatar" 
-            :style="user.profileImg 
-              ? { backgroundImage: `url(http://localhost:8080/upload/${user.profileImg})` } 
-              : { backgroundColor: '#e0e0e0' }"
+          <div
+            class="mini-avatar"
+            :style="
+              user.profileImg
+                ? {
+                    backgroundImage: `url(http://localhost:8080${user.profileImg})`,
+                  }
+                : { backgroundColor: '#e0e0e0' }
+            "
           >
             <span v-if="!user.profileImg" class="no-img-text">No Img</span>
           </div>
-          
+
           <div class="text-info">
             <div class="mini-nickname">{{ user.nickName }}</div>
-            <div class="mini-bio">{{ user.introdcution || "자기소개가 없습니다." }}</div>
+            <div class="mini-bio">
+              {{ user.introduction || "자기소개가 없습니다." }}
+            </div>
           </div>
         </div>
 
@@ -109,7 +114,7 @@ const goProfile = () => {
 
 /* 이름에 마우스 올렸을 때 효과 */
 .display-name:hover {
-  color: #4b7bff; 
+  color: #4b7bff;
   text-decoration: underline;
 }
 
