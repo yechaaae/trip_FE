@@ -241,60 +241,52 @@ onMounted(() => {
 </script>
 
 <style scoped>
-/* 기존 스타일 유지 + 추가 스타일 */
+/* ===============================
+   댓글 전체 컨테이너
+================================ */
 .comment-container {
-  margin-top: 50px;
-  padding-top: 20px;
-  border-top: 1px solid #eee;
+  margin-top: 0;
+  padding-top: 0;
+  border-top: none; /* ❌ 불필요한 상단 선 제거 */
 }
 
-.comment-form textarea {
-  width: 100%;
-  height: 80px;
-  padding: 10px;
-  border: 1px solid #ddd;
-  border-radius: 5px;
-  resize: none;
-}
-
-.regist-btn {
-  margin-top: 10px;
-  padding: 8px 16px;
-  background: #0066ff;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  float: right;
-}
-
+/* ===============================
+   댓글 리스트
+================================ */
 .comment-list {
   list-style: none;
   padding: 0;
-  margin-top: 0px;
+  margin: 0;
 }
 
+/* 댓글 하나 */
 .comment-item {
-  border-bottom: 1px solid #f1f1f1;
-  padding: 15px 0;
+  padding: 16px 0;
 }
 
-.comment-item:first-child {
-  margin-top: 0; /* 첫 번째 댓글 항목에 여백이 생기는 문제 해결 */
+/* 댓글 간 구분선 (첫 댓글 제외) */
+.comment-item + .comment-item {
+  border-top: 1px solid #f1f5f9;
+}
+
+/* ===============================
+   댓글 내용
+================================ */
+.comment-content {
+  font-size: 14px;
 }
 
 .meta {
   font-size: 13px;
-  color: #888;
-  margin-bottom: 5px;
+  color: #6b7280;
+  margin-bottom: 6px;
 }
 
 .author {
-  font-weight: bold;
-  color: #333;
-  margin-right: 10px;
+  font-weight: 600;
+  color: #374151;
+  margin-right: 8px;
   cursor: pointer;
-  transition: color 0.2s;
 }
 
 .author:hover {
@@ -304,10 +296,13 @@ onMounted(() => {
 
 .text {
   white-space: pre-wrap;
-  line-height: 1.5;
-  color: #444;
+  line-height: 1.6;
+  color: #374151;
 }
 
+/* ===============================
+   댓글 액션 (답글 / 수정 / 삭제)
+================================ */
 .actions {
   margin-top: 8px;
   font-size: 13px;
@@ -316,80 +311,128 @@ onMounted(() => {
 .actions button {
   background: none;
   border: none;
-  color: #888;
+  color: #9ca3af;
   cursor: pointer;
   margin-right: 10px;
   padding: 0;
 }
 
 .actions button:hover {
-  color: #0066ff;
+  color: #2563eb;
   text-decoration: underline;
 }
 
-/* 대댓글 스타일 */
+/* ===============================
+   대댓글
+================================ */
 .children-list {
   list-style: none;
-  padding-left: 40px;
-  margin-top: 10px;
-  background: #f9f9f9;
-  border-radius: 8px;
+  margin-top: 12px;
+  margin-left: 32px;
+  padding-left: 16px;
+  border-left: 2px solid #eef2f7;
 }
 
 .child-item {
-  padding: 10px;
-  border-top: 1px solid #eee;
+  padding: 12px 0;
 }
 
-.child-item:first-child {
-  border-top: none;
+.child-item + .child-item {
+  border-top: 1px solid #f1f5f9;
 }
 
+/* ===============================
+   삭제된 댓글
+================================ */
 .deleted-msg {
-  color: #999;
+  color: #9ca3af;
   font-style: italic;
 }
 
-/* 답글 & 수정 입력창 공통 스타일 */
+/* ===============================
+   답글 / 수정 입력창
+================================ */
 .reply-form,
 .edit-box {
-  margin-top: 10px;
-  padding: 10px;
-  background: #f1f3f5;
-  border-radius: 5px;
+  margin-top: 12px;
+  padding: 12px;
+  background: #f9fafb;
+  border-radius: 8px;
 }
 
 .reply-form textarea,
 .edit-box textarea {
   width: 100%;
-  height: 60px;
-  border: 1px solid #ccc;
-  padding: 5px;
-  background: white;
+  height: 70px;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  padding: 8px;
   resize: none;
+  font-size: 14px;
 }
 
 .reply-actions,
 .edit-actions {
   display: flex;
   justify-content: flex-end;
-  gap: 5px;
-  margin-top: 5px;
+  gap: 8px;
+  margin-top: 8px;
 }
 
 .reply-actions button,
 .edit-actions button {
-  padding: 5px 10px;
+  padding: 6px 14px;
+  border-radius: 6px;
   border: none;
-  border-radius: 3px;
   cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
   background: #0066ff;
-  color: white;
+  color: #fff;
 }
 
 .reply-actions button.cancel,
 .edit-actions button.cancel {
-  background: #ccc;
-  color: #333;
+  background: #e5e7eb;
+  color: #374151;
 }
+
+/* ===============================
+   댓글 작성 폼 (하단 고정 느낌)
+================================ */
+.comment-form {
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid #f1f5f9;
+
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.comment-form textarea {
+  width: 100%;
+  height: 90px;
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid #d1d5db;
+  resize: none;
+  font-size: 14px;
+}
+
+.regist-btn {
+  align-self: flex-end;   
+  padding: 8px 20px;
+
+  background: #0066ff;
+  color: white;
+  border: none;
+  border-radius: 8px;
+
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+
 </style>

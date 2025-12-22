@@ -1,38 +1,28 @@
 <template>
   <div class="detail-container">
-    <h1>{{ post.title }}</h1>
+    <article class="detail-card">
 
-    <!-- 별점 (제목 아래로 이동) -->
-    <div class="rating">⭐ {{ post.rating }} / 5.0</div>
+      <!-- 제목 -->
+      <h1 class="detail-title">{{ post.title }}</h1>
 
-    <!-- 이미지 영역이 있을 때만 보이도록 수정 -->
-    <div v-if="post.saveFile" class="image-container">
-      <img :src="`http://localhost:8080/upload/${post.saveFile}`" class="detail-img" />
-    </div>
-
-    <!-- 이미지가 없으면 이 부분은 아예 보이지 않도록 설정 -->
-    <div v-else class="image-placeholder"></div>
-
-    <p class="content">
-      {{ post.content }}
-    </p>
-
-    <!-- 좋아요, 댓글과 작성자, 날짜, 조회수를 다른 행으로 배치 -->
-    <div class="post-meta-actions">
-      <div class="actions">
-        <button class="action-btn like-btn" :class="{ liked: post.userLiked }" @click="toggleLike">
-          {{ post.userLiked ? "❤️" : "🤍" }} 좋아요 {{ post.likeCount }}
-        </button>
-        <button>💬 댓글 {{ post.commentCount || 0 }}</button>
+      <!-- 평점 -->
+      <div v-if="post.rating" class="rating">
+        ⭐ {{ post.rating }} / 5.0
       </div>
 
-      <div class="post-meta">
-        <span class="writer" @click="goToProfile(post.userId)" style="cursor: pointer"> by {{ post.nickName }}</span>
-        <span class="date">·{{ post.registDate }}</span>
-        <span class="views">·조회{{ post.hit }} </span>
-      </div>
-    </div>
+      <!-- 이미지 -->
+      <img
+        v-if="post.saveFile"
+        :src="`http://localhost:8080/upload/${post.saveFile}`"
+        class="detail-img"
+      />
 
+      <!-- 본문 -->
+      <div class="detail-content">
+        {{ post.content }}
+      </div>
+
+<<<<<<< HEAD
     <div class="owner-actions" v-if="userInfo && (userInfo.userId === post.userId || userInfo.role === 1)">
   <button v-if="userInfo.userId === post.userId" class="edit-btn" @click="goModify">수정</button>
   
@@ -40,10 +30,60 @@
     {{ userInfo.role === 1 && userInfo.userId !== post.userId ? '강제 삭제' : '삭제' }}
   </button>
 </div>
+=======
+      <!-- 액션 + 메타 -->
+      <div class="detail-footer">
+>>>>>>> b0c03e8 (board detail page modify)
 
-    <CommentList :boardId="postId" :userInfo="userInfo" />
+        <!-- 좌측: 좋아요 / 댓글 / 조회수 -->
+        <div class="actions">
+          <button
+            class="like-btn"
+            :class="{ liked: post.userLiked }"
+            @click="toggleLike"
+          >
+            {{ post.userLiked ? "❤️" : "🤍" }} {{ post.likeCount }}
+          </button>
+
+          <button class="comment-btn">
+            💬 {{ post.commentCount || 0 }}
+          </button>
+
+          <span class="views">👀 {{ post.hit }}</span>
+        </div>
+
+        <!-- 우측: 수정/삭제 + 작성자/날짜 -->
+        <div class="meta-area">
+
+          <!-- 작성자 전용 버튼  -->
+          <div
+            class="owner-actions"
+            v-if="userInfo && userInfo.userId === post.userId"
+          >
+            <button class="owner-btn edit" @click="goModify">수정</button>
+            <button class="owner-btn delete" @click="deleteArticle">삭제</button>
+          </div>
+
+          <!-- 메타 정보 -->
+          <div class="meta">
+            <span class="writer" @click="goToProfile(post.userId)">
+              {{ post.nickName }}
+            </span>
+            · {{ post.registDate }}
+          </div>
+
+        </div>
+      </div>
+
+      <!-- 댓글 영역 -->
+      <div class="comment-section">
+        <CommentList :boardId="postId" :userInfo="userInfo" />
+      </div>
+
+    </article>
   </div>
 </template>
+
 
 <script setup>
 import { ref, onMounted } from "vue";
@@ -158,123 +198,202 @@ const goToProfile = (userId) => {
 </script>
 
 <style scoped>
+/* ===============================
+   레이아웃
+================================ */
 .detail-container {
-  max-width: 850px;
-  margin: 48px auto;
+  max-width: 880px;
+  margin: 32px auto 80px;
+  padding: 0 24px;
 }
 
-.detail-img {
-  width: 100%;
-  max-height: 500px;
-  object-fit: contain;
-  border-radius: 12px;
-  margin: 22px 0;
+/* ===============================
+   게시글 카드
+================================ */
+.detail-card {
+  background: #ffffff;
+  border: 1px solid #e6ebf2;
+  border-radius: 20px;
+  padding: 28px 32px 36px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.04);
 }
 
-.image-placeholder {
-  width: 100%;
-  height: 380px;
-  background: #cfdaf0;
-  border-radius: 12px;
-  margin: 22px 0;
+/* ===============================
+   제목 / 평점
+================================ */
+.detail-title {
+  font-size: 30px;
+  font-weight: 800;
+  line-height: 1.2;
+  margin-left: 6px;
 }
 
 .rating {
-  font-size: 18px;
-  margin-bottom: 14px;
-  font-weight: 600;
+  font-size: 16px;
+  font-weight: 700;
+  color: #f5a623;
+  margin-left: 15px;
 }
 
-.content {
+.detail-content {
+  margin-top: 28px;     
+  margin-left: 10px;
   font-size: 17px;
-  line-height: 1.55;
-  margin-bottom: 28px;
-  white-space: pre-line;
+  line-height: 1.75;
 }
 
-/* 좋아요, 댓글과 작성자, 날짜, 조회수 배치 */
-.post-meta-actions {
+/* ===============================
+   이미지
+================================ */
+.detail-img {
+  width: 100%;
+  max-height: 420px;
+  object-fit: contain;
+  border-radius: 14px;
+  background: #f3f4f6;
+  margin: 18px 0 22px;
+}
+
+/* ===============================
+   본문
+================================ */
+.detail-content {
+  font-size: 16px;
+  line-height: 1.65;
+  color: #374151;
+  white-space: pre-line;
+  margin-bottom: 24px;
+}
+
+/* ===============================
+   하단 액션 / 메타
+================================ */
+.detail-footer {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 0;
+  padding-top: 14px;
 }
 
 .actions {
   display: flex;
+  align-items: center;
+  gap: 14px;
 }
 
-.actions button {
-  margin-right: 10px;
-  background: none;
+.like-btn,
+.comment-btn {
+  padding: 8px 18px;
+  border-radius: 999px;
   border: none;
+  font-size: 15px;         
+  font-weight: 700;        
   cursor: pointer;
-  font-size: 17px;
-  padding: 5px 10px;
-  border-radius: 5px;
-  transition: all 0.2s ease;
 }
 
-.action-btn:hover {
-  background-color: #f0f0f0;
+.like-btn {
+  background: #fff0f2;
+  color: #e53e3e;
 }
 
-/* 작성자와 날짜, 조회수 */
-.post-meta {
+.like-btn.liked {
+  background: #ffe4ea;
+}
+
+.comment-btn {
+  background: #ebf4ff;
+  color: #2563eb;
+}
+
+.views {
+  font-size: 15px;          
+  font-weight: 600;
+  color: #6b7280;
+}
+
+.meta-area {
   display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+}
+
+.meta {
   font-size: 14px;
-  color: #777;
-}
-
-.writer {
-  font-weight: bold;
-  margin-right: 8px;
-}
-
-.date .views {
-  color: #aaa;
+  color: #6b7280;
 }
 
 .owner-actions {
-  margin-top: 30px;
+  display: flex;
+  gap: 12px;
+}
+
+.owner-btn {
+  background: none;
+  border: none;
+  font-size: 13px;
+  font-weight: 600;
+  color: #9ca3af;
+  cursor: pointer;
+  padding: 0;
+}
+
+.owner-btn.edit:hover {
+  color: #2563eb;
+  text-decoration: underline;
+}
+
+.owner-btn.delete:hover {
+  color: #ef4444;
+  text-decoration: underline;
+}
+
+.writer {
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.writer:hover {
+  color: #0066ff;
+  text-decoration: underline;
+}
+
+/* ===============================
+   수정 / 삭제 버튼 (자연스럽게)
+================================ */
+.owner-actions {
   display: flex;
   justify-content: flex-end;
-  gap: 10px;
-  border-top: 1px solid #eee;
-  padding-top: 20px;
+  gap: 12px;
+  margin-top: 8px;
 }
 
-.edit-btn,
-.delete-btn {
-  padding: 8px 16px;
-  border-radius: 6px;
+.owner-btn {
+  background: none;
   border: none;
+  font-size: 13px;
+  color: #9ca3af;
   cursor: pointer;
-  font-size: 14px;
-  color: white;
+  padding: 2px 4px;
 }
 
-.edit-btn {
-  background-color: #4caf50;
-}
-.delete-btn {
-  background-color: #f44336;
+.owner-btn.edit:hover {
+  color: #2563eb;
+  text-decoration: underline;
 }
 
-/* 좋아요 버튼 전용 스타일 */
-.like-btn {
-  color: #555; /* 기본 색상 */
+.owner-btn.delete:hover {
+  color: #ef4444;
+  text-decoration: underline;
 }
 
-/* 좋아요 눌렀을 때 (.liked 클래스) */
-.like-btn.liked {
-  color: #ff4081; /* 핑크/빨강 계열 */
-  font-weight: bold;
-  background-color: #fff0f5; /* 연한 핑크 배경 */
-}
-
-/* 클릭 시 띠용~ 하는 애니메이션 효과 (선택사항) */
-.like-btn:active {
-  transform: scale(1.2);
+/* ===============================
+   댓글 영역
+================================ */
+.comment-section {
+  margin-top: 12px;
+  padding: 24px;
+  background: #f9fafb;
+  border-radius: 16px;
 }
 </style>

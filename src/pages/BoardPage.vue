@@ -1,58 +1,69 @@
 <template>
   <div class="board-container">
-    <h1>{{ currentType === 2 ? "여행 후기" : "자유 게시판" }}</h1>
-
     <div class="tab-menu">
       <button :class="{ active: currentType === 2 }" @click="changeTab(2)">📸 여행 후기</button>
       <button :class="{ active: currentType === 1 }" @click="changeTab(1)">🗣️ 자유 게시판</button>
     </div>
 
-    <div class="top-controls">
-      <div class="filter-container">
-        <label class="checkbox-label" title="로그인이 필요합니다">
+    <div class="filter-search-row">
+      <!-- LEFT : FILTER -->
+      <div class="filter-group">
+        <!-- ❤️ 팔로우 토글 -->
+        <label class="toggle-switch">
           <input type="checkbox" v-model="onlyFollowing" @change="getArticles" />
-          <span>❤️ 내 팔로우만</span>
+          <span class="slider"></span>
+          <span class="toggle-label">내 팔로우만</span>
         </label>
 
-        <div class="vertical-divider"></div>
+        <!-- 날짜 필터 -->
         <div class="date-range">
-          <input type="date" v-model="startDate" @change="getArticles" placeholder="시작일" />
+          <input type="date" v-model="startDate" @change="getArticles" />
           <span class="tilde">~</span>
-          <input type="date" v-model="endDate" @change="getArticles" placeholder="종료일" />
+          <input type="date" v-model="endDate" @change="getArticles" />
         </div>
       </div>
 
-      <div class="right-controls">
-        <div class="search-box-wrapper">
-          <div class="search-box">
-            <input
-              type="text"
-              v-model="searchWord"
-              @input="onSearchInput"
-              @keyup.enter="getArticles"
-              placeholder="검색어 입력"
-            />
-            <button class="icon-btn search-btn" @click="getArticles">🔍</button>
-          </div>
-          <ul v-if="suggestions.length > 0 && showSuggestions" class="suggestions-list">
-            <li v-for="(item, index) in suggestions" :key="index" @click="selectSuggestion(item)">🔍 {{ item }}</li>
-          </ul>
+      <!-- RIGHT : SEARCH -->
+      <div class="search-group">
+        <div class="search-box">
+          <input
+            type="text"
+            v-model="searchWord"
+            @input="onSearchInput"
+            @keyup.enter="getArticles"
+            placeholder="장소명, 제목, 작성자 검색"
+          />
+          <button class="icon-btn search-btn" @click="getArticles">🔍</button>
         </div>
 
-        <div class="sort-box">
-          <select v-model="sortOrder" @change="getArticles">
-            <option value="latest">최신순</option>
-            <option value="views">조회수순</option>
-            <option value="comments">댓글순</option>
-            <option value="likes">좋아요순</option>
-          </select>
-        </div>
-
-        <button class="write-btn" @click="goWrite">
-          {{ currentType === 2 ? "✏️ 리뷰 작성" : "✏️ 글 작성" }}
-        </button>
+        <ul v-if="suggestions.length && showSuggestions" class="suggestions-list">
+          <li
+            v-for="(item, index) in suggestions"
+            :key="index"
+            @click="selectSuggestion(item)"
+          >
+            🔍 {{ item }}
+          </li>
+        </ul>
       </div>
     </div>
+
+    <!-- 🔧 ACTION BAR -->
+    <div class="action-bar">
+      <div class="sort-box">
+        <select v-model="sortOrder" @change="getArticles">
+          <option value="latest">최신순</option>
+          <option value="views">조회수순</option>
+          <option value="comments">댓글순</option>
+          <option value="likes">좋아요순</option>
+        </select>
+      </div>
+
+      <button class="write-btn" @click="goWrite">
+        {{ currentType === 2 ? "✏️ 리뷰 작성" : "✏️ 글 작성" }}
+      </button>
+    </div>
+
 
     <div @click="showSuggestions = false">
       <div v-if="currentType === 2" class="review-feed">
@@ -221,329 +232,285 @@ onMounted(() => {
 </script>
 
 <style scoped lang="scss">
-/* =========================================
-   1. 전체 레이아웃 & 탭 메뉴
-   ========================================= */
+/* =====================================================
+   0. 페이지 프레임
+   ===================================================== */
 .board-container {
-  max-width: 900px; /* 너비를 조금 더 넓혀서 여유 있게 */
+  max-width: 880px;
   margin: 0 auto;
-  padding: 40px 20px;
-
-  h1 {
-    text-align: center;
-    margin-bottom: 30px;
-    font-size: 28px;
-    font-weight: 700;
-    color: #333;
-  }
+  padding: 24px 24px 80px;
 }
 
+body {
+  background: #f5f7fb;
+}
+
+/* =====================================================
+   2. 탭 메뉴
+   ===================================================== */
 .tab-menu {
   display: flex;
   justify-content: center;
-  gap: 12px;
-  margin-bottom: 40px;
+  gap: 8px;
+  margin-bottom: 20px;
 }
 
 .tab-menu button {
-  padding: 12px 28px;
-  border: 1px solid #e1e4e8;
-  background: #f8f9fa;
-  color: #666;
-  border-radius: 30px; /* 둥근 캡슐 모양 */
-  font-size: 16px;
-  font-weight: 500;
+  padding: 8px 20px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: #6b7280;
+  font-size: 14px;
+  font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
 .tab-menu button:hover {
-  background: #eef1f5;
+  background: #f1f5ff;
 }
 
 .tab-menu button.active {
   background: #0066ff;
-  color: white;
+  color: #fff;
   border-color: #0066ff;
-  font-weight: bold;
-  box-shadow: 0 4px 10px rgba(0, 102, 255, 0.3);
+  box-shadow: 0 4px 10px rgba(0, 102, 255, 0.25);
 }
 
-/* =========================================
-   2. [NEW] 상단 컨트롤 바 (필터, 검색, 정렬)
-   ========================================= */
-.top-controls {
+/* =====================================================
+   3. FILTER + SEARCH ROW
+   ===================================================== */
+.filter-search-row {
   display: flex;
+  align-items: center;
   justify-content: space-between;
-  align-items: center; /* 수직 중앙 정렬 핵심 */
-  flex-wrap: wrap;
-  gap: 16px;
-  margin-bottom: 24px;
+  gap: 20px;
+
+  padding: 12px 16px;
+  margin-bottom: 20px;
+
+  background: #f9fbff;
+  border: 1px solid #e4e9f2;
+  border-radius: 14px;
 }
 
-/* 2-1. 좌측 필터 그룹 (흰색 박스로 감싸기) */
-.filter-container {
+/* LEFT : FILTER */
+.filter-group {
   display: flex;
   align-items: center;
   gap: 16px;
-  background: #fff;
-  border: 1px solid #dcdfe6;
-  padding: 0 20px;
-  height: 44px; /* 높이 고정 */
-  border-radius: 8px;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.03);
 }
 
-.checkbox-label {
+/* 토글 */
+.toggle-switch {
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
-  color: #444;
-  cursor: pointer;
+  color: #374151;
+}
+
+.toggle-switch input {
+  display: none;
+}
+
+.toggle-switch .slider {
+  width: 36px;
+  height: 20px;
+  background: #dcdfe6;
+  border-radius: 20px;
+  position: relative;
+  transition: background 0.3s;
+}
+
+.toggle-switch .slider::before {
+  content: "";
+  width: 16px;
+  height: 16px;
+  background: #fff;
+  border-radius: 50%;
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  transition: transform 0.3s;
+}
+
+.toggle-switch input:checked + .slider {
+  background: #ff5a5f;
+}
+
+.toggle-switch input:checked + .slider::before {
+  transform: translateX(16px);
+}
+
+.toggle-label {
   user-select: none;
 }
 
-.checkbox-label input[type="checkbox"] {
-  width: 18px;
-  height: 18px;
-  accent-color: #ff4081;
-  cursor: pointer;
-}
-
-.vertical-divider {
-  width: 1px;
-  height: 20px;
-  background-color: #e0e0e0;
-}
-
+/* 날짜 */
 .date-range {
   display: flex;
   align-items: center;
   gap: 8px;
 }
 
-.date-range input[type="date"] {
-  border: none;
-  font-size: 14px;
-  color: #555;
-  background: transparent;
-  outline: none;
-  font-family: inherit;
-  cursor: pointer;
+.date-range input {
+  height: 34px;
+  padding: 0 8px;
+  font-size: 12px;
+  border-radius: 8px;
+  border: 1px solid #dcdfe6;
 }
 
 .tilde {
-  color: #aaa;
-  font-weight: bold;
+  color: #999;
 }
 
-/* 2-2. 우측 컨트롤 그룹 */
-.right-controls {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-/* 검색창 */
-.search-box-wrapper {
+/* RIGHT : SEARCH */
+.search-group {
   position: relative;
 }
 
 .search-box {
   display: flex;
   align-items: center;
-  border: 1px solid #dcdfe6;
-  border-radius: 8px;
-  background: #fff;
-  height: 44px; /* 높이 통일 */
-  padding: 0 8px 0 16px;
-  transition: border-color 0.2s;
-}
+  height: 38px;
+  padding: 0 12px;
 
-.search-box:focus-within {
-  border-color: #0066ff;
-  box-shadow: 0 0 0 3px rgba(0, 102, 255, 0.1);
+  border-radius: 10px;
+  border: 1px solid #dcdfe6;
+  background: #ffffff;
 }
 
 .search-box input {
+  width: 200px;
   border: none;
   outline: none;
-  font-size: 14px;
-  width: 160px;
+  font-size: 13px;
 }
 
 .icon-btn.search-btn {
-  background: transparent;
+  background: none;
   border: none;
-  font-size: 18px;
+  font-size: 16px;
   cursor: pointer;
-  padding: 8px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
 }
 
 .icon-btn.search-btn:hover {
-  background: #f0f2f5;
+  background: #eef3ff;
 }
 
-/* 자동완성 목록 */
-.suggestions-list {
-  position: absolute;
-  top: 50px;
-  left: 0;
-  width: 100%;
-  min-width: 200px;
-  background: white;
-  border: 1px solid #e1e4e8;
-  border-radius: 8px;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-  list-style: none;
-  padding: 8px 0;
-  z-index: 1000;
-  max-height: 240px;
-  overflow-y: auto;
-}
-
-.suggestions-list li {
-  padding: 10px 16px;
-  font-size: 14px;
-  cursor: pointer;
-  color: #333;
-}
-
-.suggestions-list li:hover {
-  background: #f5f7fa;
-  color: #0066ff;
-}
-
-/* 정렬 셀렉트 박스 */
-.sort-box select {
-  height: 44px; /* 높이 통일 */
-  border: 1px solid #dcdfe6;
-  border-radius: 8px;
-  padding: 0 36px 0 16px;
-  font-size: 14px;
-  color: #555;
-  background-color: #fff;
-  cursor: pointer;
-  outline: none;
-}
-
-.sort-box select:focus {
-  border-color: #0066ff;
-}
-
-/* 글쓰기 버튼 */
-.write-btn {
-  height: 44px; /* 높이 통일 */
-  padding: 0 24px;
-  background-color: #0066ff;
-  color: white;
-  font-size: 15px;
-  font-weight: 600;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  white-space: nowrap;
-  box-shadow: 0 4px 12px rgba(0, 102, 255, 0.25);
-  transition: all 0.2s;
+/* =====================================================
+   4. ACTION BAR
+   ===================================================== */
+.action-bar {
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: space-between;
+  margin: 20px 0 20px; 
+}
+
+.sort-box select {
+  height: 36px;
+  padding: 0 14px;
+  font-size: 13px;
+  border-radius: 8px;
+  border: 1px solid #dcdfe6;
+  background: #fff;
+}
+
+.write-btn {
+  height: 42px;
+  padding: 0 26px;
+  font-size: 14px;
+  font-weight: 600;
+  border-radius: 10px;
+  border: none;
+  background: #0066ff;
+  color: #fff;
+  cursor: pointer;
+  box-shadow: 0 6px 16px rgba(0, 102, 255, 0.25);
 }
 
 .write-btn:hover {
-  background-color: #0056d6;
-  transform: translateY(-1px);
+  background: #0056d6;
 }
 
-.write-btn:active {
-  transform: translateY(0);
-}
-
-/* =========================================
-   3. 리뷰 피드 (카드 형태)
-   ========================================= */
+/* =====================================================
+   5. 리뷰 카드
+   ===================================================== */
 .review-feed {
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 20px;
 }
 
 .review-card {
-  border: 1px solid #e1e4e8;
-  border-radius: 16px;
   background: #fff;
-  padding: 24px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  border: 1px solid #e6ebf2;
+  border-radius: 16px;
+  padding: 22px 24px 24px;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: box-shadow 0.2s ease, border-color 0.2s ease;
 }
 
 .review-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.08);
-  border-color: #cdd2d9;
+  border-color: #d0d7e2;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.06);
 }
 
 .place {
   font-size: 20px;
-  margin-bottom: 16px;
   font-weight: 700;
-  color: #1a1a1a;
+  color: #1f2937;
+  margin-bottom: 12px;
 }
 
 .photo-img {
   width: 100%;
-  height: 280px;
+  height: 230px;
   object-fit: cover;
   border-radius: 12px;
-  margin-bottom: 16px;
-  border: 1px solid #f0f0f0;
+  margin-bottom: 14px;
+  background: #f0f2f5;
 }
 
 .rating {
-  font-size: 16px;
-  margin-bottom: 12px;
+  font-size: 15px;
+  font-weight: 700;
   color: #f5a623;
-  font-weight: 800;
+  margin-bottom: 8px;
 }
 
 .preview-text {
   font-size: 15px;
   line-height: 1.6;
-  color: #4a5568;
-  margin-bottom: 20px;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  color: #4b5563;
+  margin-bottom: 18px;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
+/* 하단 액션 */
 .actions {
   display: flex;
-  gap: 12px;
   align-items: center;
-  border-top: 1px solid #f0f0f0;
-  padding-top: 16px;
+  gap: 10px;
+  padding-top: 14px;
+  border-top: 1px solid #eef1f5;
 }
 
 .like-btn,
 .comment-btn {
-  padding: 8px 14px;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  font-size: 14px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 13px;
   font-weight: 600;
-  display: flex;
-  align-items: center;
-  gap: 6px;
+  border: none;
 }
 
 .like-btn {
@@ -552,91 +519,39 @@ onMounted(() => {
 }
 
 .comment-btn {
-  background: #ebf8ff;
-  color: #3182ce;
+  background: #ebf4ff;
+  color: #2563eb;
 }
 
 .views {
-  font-size: 14px;
-  color: #718096;
-  margin-left: 4px;
+  font-size: 13px;
+  color: #6b7280;
 }
 
 .writer {
   margin-left: auto;
-  font-size: 14px;
-  color: #718096;
+  font-size: 13px;
+  color: #6b7280;
 }
 
-.nickname-link:hover,
-.clickable-writer:hover {
+.nickname-link:hover {
   color: #0066ff;
   text-decoration: underline;
   cursor: pointer;
-  font-weight: 600;
 }
 
-/* =========================================
-   4. 자유 게시판 (리스트 형태)
-   ========================================= */
-.free-board-list table {
-  width: 100%;
-  border-collapse: separate;
-  border-spacing: 0;
-  background: white;
-  border-radius: 12px;
-  overflow: hidden;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-  border: 1px solid #e1e4e8;
-}
-
-.free-board-list th {
-  background: #f8f9fa;
-  padding: 16px;
-  font-size: 15px;
-  font-weight: 600;
-  color: #555;
-  border-bottom: 1px solid #e1e4e8;
-  text-align: center;
-}
-
-.free-board-list td {
-  padding: 16px;
-  border-bottom: 1px solid #f0f0f0;
-  text-align: center;
-  font-size: 15px;
-  color: #333;
-}
-
-.free-board-list tr:last-child td {
-  border-bottom: none;
-}
-
-.free-board-list tr:hover {
-  background: #f9fbff;
-  cursor: pointer;
-}
-
-.title-td {
-  text-align: left !important;
-  font-weight: 500;
-  color: #2d3748;
-}
-
-.empty-msg {
-  padding: 60px !important;
-  color: #a0aec0;
-  font-size: 16px;
-}
-
-/* [신규] 게시글 없을 때 메시지 스타일 */
+/* =====================================================
+   6. 빈 상태
+   ===================================================== */
 .empty-feed-msg {
-  text-align: center;
+  margin-top: 40px;
   padding: 60px 0;
-  color: #a0aec0;
+  text-align: center;
+  color: #9ca3af;
   font-size: 16px;
+  border-radius: 14px;
   background: #f8f9fa;
-  border-radius: 12px;
   border: 1px dashed #dcdfe6;
 }
+
 </style>
