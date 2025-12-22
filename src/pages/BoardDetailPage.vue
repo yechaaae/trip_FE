@@ -22,18 +22,8 @@
         {{ post.content }}
       </div>
 
-<<<<<<< HEAD
-    <div class="owner-actions" v-if="userInfo && (userInfo.userId === post.userId || userInfo.role === 1)">
-  <button v-if="userInfo.userId === post.userId" class="edit-btn" @click="goModify">수정</button>
-  
-  <button class="delete-btn" @click="deleteArticle">
-    {{ userInfo.role === 1 && userInfo.userId !== post.userId ? '강제 삭제' : '삭제' }}
-  </button>
-</div>
-=======
       <!-- 액션 + 메타 -->
       <div class="detail-footer">
->>>>>>> b0c03e8 (board detail page modify)
 
         <!-- 좌측: 좋아요 / 댓글 / 조회수 -->
         <div class="actions">
@@ -55,7 +45,7 @@
         <!-- 우측: 수정/삭제 + 작성자/날짜 -->
         <div class="meta-area">
 
-          <!-- 작성자 전용 버튼  -->
+          <!-- 작성자 전용 버튼 (⬆ 위로 이동) -->
           <div
             class="owner-actions"
             v-if="userInfo && userInfo.userId === post.userId"
