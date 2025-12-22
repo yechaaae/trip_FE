@@ -33,10 +33,13 @@
       </div>
     </div>
 
-    <div class="owner-actions" v-if="userInfo && userInfo.userId === post.userId">
-      <button class="edit-btn" @click="goModify">수정</button>
-      <button class="delete-btn" @click="deleteArticle">삭제</button>
-    </div>
+    <div class="owner-actions" v-if="userInfo && (userInfo.userId === post.userId || userInfo.role === 1)">
+  <button v-if="userInfo.userId === post.userId" class="edit-btn" @click="goModify">수정</button>
+  
+  <button class="delete-btn" @click="deleteArticle">
+    {{ userInfo.role === 1 && userInfo.userId !== post.userId ? '강제 삭제' : '삭제' }}
+  </button>
+</div>
 
     <CommentList :boardId="postId" :userInfo="userInfo" />
   </div>
@@ -73,21 +76,26 @@ onMounted(async () => {
 
 // 삭제 기능
 const deleteArticle = async () => {
-  if (!confirm("정말 삭제하시겠습니까?")) return;
+  const isAdmin = userInfo.value?.role === 1;
+  const msg = isAdmin ? "관리자 권한으로 이 게시글을 강제 삭제하시겠습니까?" : "정말 삭제하시겠습니까?";
+  
+  if (!confirm(msg)) return;
 
   try {
-    await axios.delete(`http://localhost:8080/api/board/${postId}`, {
-      withCredentials: true, // 세션 쿠키 전송 (백엔드 본인확인용)
+    // 관리자면 /admin/board, 일반유저면 /api/board 호출 (백엔드 설정에 맞춤)
+    const url = isAdmin 
+                ? `http://localhost:8080/admin/board/${postId}` 
+                : `http://localhost:8080/api/board/${postId}`;
+
+    await axios.delete(url, {
+      withCredentials: true,
     });
+    
     alert("삭제되었습니다.");
     router.push("/board");
   } catch (error) {
     console.error(error);
-    if (error.response && error.response.status === 403) {
-      alert("삭제 권한이 없습니다."); // 백엔드에서 막았을 때
-    } else {
-      alert("삭제 중 오류가 발생했습니다.");
-    }
+    alert("삭제 중 오류가 발생했습니다.");
   }
 };
 

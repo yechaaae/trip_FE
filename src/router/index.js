@@ -2,11 +2,19 @@ import { createRouter, createWebHistory } from "vue-router";
 import AttractionDetailPage from "@/pages/PlaceDetailPage.vue";
 import RankingLayout from "@/pages/ranking/RankingLayout.vue";
 import ReviewRanking from "@/pages/ranking/ReviewRankingPage.vue";
-
+import AdminUserPage from '@/pages/AdminUserPage.vue'
+import { useMemberStore } from "@/stores/memberStore";
+import { storeToRefs } from "pinia";
 const routes = [
   // ===== 메인 페이지 =====
   { path: "/", name: "Home", component: () => import("@/pages/HomePage.vue") },
-
+  {
+    path: '/admin/users',
+    name: 'admin-users',
+    component: AdminUserPage,
+    // meta 필드에 관리자 전용 여부를 표시합니다.
+    meta: { requiresAdmin: true } 
+  },
   // ===== 관광·지역 =====
   { path: "/area", name: "Area", component: () => import("@/pages/AreaPage.vue") },
   { path: "/tour", name: "Tour", component: () => import("@/pages/TourPage.vue") },
@@ -76,6 +84,26 @@ const routes = [
 const router = createRouter({
   history: createWebHistory(),
   routes,
+});
+
+router.beforeEach((to, from, next) => {
+  const memberStore = useMemberStore();
+  const { userInfo } = storeToRefs(memberStore);
+
+  // 1. 접근하려는 페이지가 관리자 전용(requiresAdmin)인지 확인
+  if (to.meta.requiresAdmin) {
+    // 2. 로그인이 안 되어 있거나, 권한(role)이 1(관리자)이 아니면 차단
+    if (!userInfo.value || userInfo.value.role !== 1) {
+      alert("관리자 권한이 필요한 페이지입니다.");
+      next("/"); // 메인 페이지로 리다이렉트
+    } else {
+      next(); // 관리자라면 통과
+    }
+  } 
+  // 관리자 전용 페이지가 아니라면 모두 통과
+  else {
+    next();
+  }
 });
 
 export default router;

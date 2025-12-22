@@ -377,4 +377,18 @@ const logout = async () => {
   color: #495057;
 }
 
+.admin-link {
+  color: #d32f2f; /* 관리자 강조용 빨간색 */
+  font-weight: 800;
+  text-decoration: none;
+  font-size: 13px;
+  border: 1px solid #d32f2f;
+  padding: 4px 8px;
+  border-radius: 4px;
+  margin-right: 8px;
+}
+.admin-link:hover {
+  background-color: #d32f2f;
+  color: white;
+}
 </style>

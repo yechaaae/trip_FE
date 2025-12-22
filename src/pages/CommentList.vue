@@ -25,12 +25,17 @@
             <p v-else class="text">{{ comment.content }}</p>
 
             <div class="actions" v-if="!comment.isDeleted">
-              <button @click="toggleReplyBox(comment.commentId)">답글</button>
-              <span v-if="isOwner(comment.userId)">
-                <button @click="openEdit(comment)">수정</button>
-                <button @click="deleteComment(comment.commentId)">삭제</button>
-              </span>
-            </div>
+  <button @click="toggleReplyBox(comment.commentId)">답글</button>
+  
+  <span v-if="isOwner(comment.userId) || userInfo?.role === 1">
+    <button v-if="isOwner(comment.userId)" @click="openEdit(comment)">수정</button>
+    
+    <button @click="deleteComment(comment.commentId)" 
+            :style="userInfo?.role === 1 && !isOwner(comment.userId) ? 'color: #f44336; font-weight: bold;' : ''">
+      {{ userInfo?.role === 1 && !isOwner(comment.userId) ? '강제 삭제' : '삭제' }}
+    </button>
+  </span>
+</div>
           </div>
         </div>
 
@@ -170,19 +175,28 @@ const submitComment = async (parentId) => {
 
 /* --- 삭제 --- */
 const deleteComment = async (commentId) => {
-  if (!confirm("정말 삭제하시겠습니까?")) return;
+  const isAdmin = props.userInfo?.role === 1;
+  const msg = isAdmin ? "관리자 권한으로 이 댓글을 강제 삭제하시겠습니까?" : "정말 삭제하시겠습니까?";
+  
+  if (!confirm(msg)) return;
+
   try {
-    // DELETE 요청 시 data 옵션으로 userId 전송
-    await axios.delete(`http://localhost:8080/comment/${commentId}`, {
-      data: { userId: props.userInfo.userId },
+    // 관리자면 /admin/comment, 일반유저면 /comment 호출
+    const url = isAdmin 
+                ? `http://localhost:8080/admin/comment/${commentId}` 
+                : `http://localhost:8080/comment/${commentId}`;
+
+    await axios.delete(url, {
+      data: { userId: props.userInfo.userId }, // 기존 로직 유지
+      withCredentials: true
     });
+    
     await fetchComments();
   } catch (error) {
     console.error("삭제 실패", error);
     alert("삭제 권한이 없거나 오류가 발생했습니다.");
   }
 };
-
 /* --- ★ 수정 기능 (추가됨) --- */
 
 // 1. 수정 모드 진입
