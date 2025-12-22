@@ -27,18 +27,21 @@
 
     <!-- ACTION BAR -->
     <section class="action-bar">
+      <!-- 저장하기 -->
       <div class="action-item" @click="toggleSave">
-        <i :class="saved ? 'fa-solid fa-heart saved' : 'fa-regular fa-heart'"></i>
+        <img :src="saveIcon" class="action-icon" :class="{ active: saved }" alt="저장하기" />
         <span>{{ saved ? "저장됨" : "저장하기" }}</span>
       </div>
 
+      <!-- 리뷰쓰기 -->
       <div class="action-item" @click="goWriteReview">
-        <i class="fa-regular fa-star"></i>
+        <img :src="reviewIcon" class="action-icon" alt="리뷰쓰기" />
         <span>리뷰쓰기</span>
       </div>
 
+      <!-- 공유하기 -->
       <div class="action-item" @click="sharePlace">
-        <i class="fa-solid fa-share-nodes"></i>
+        <img :src="shareIcon" class="action-icon" alt="공유하기" />
         <span>공유하기</span>
       </div>
     </section>
@@ -76,7 +79,6 @@
     </section>
   </div>
 
-
   <!-- REVIEWS -->
   <section class="reviews-section">
     <div class="reviews-header" @click="toggleReview">
@@ -92,32 +94,40 @@
       <div class="sort">
         <button
           :class="{ active: reviewSort === 'latest' }"
-          @click="reviewSort='latest'; fetchReviews({reset:true})"
-        >최신순</button>
+          @click="
+            reviewSort = 'latest';
+            fetchReviews({ reset: true });
+          "
+        >
+          최신순
+        </button>
 
         <button
           :class="{ active: reviewSort === 'rating' }"
-          @click="reviewSort='rating'; fetchReviews({reset:true})"
-        >별점순</button>
+          @click="
+            reviewSort = 'rating';
+            fetchReviews({ reset: true });
+          "
+        >
+          별점순
+        </button>
 
         <button
           :class="{ active: reviewSort === 'popular' }"
-          @click="reviewSort='popular'; fetchReviews({reset:true})"
-        >인기순</button>
+          @click="
+            reviewSort = 'popular';
+            fetchReviews({ reset: true });
+          "
+        >
+          인기순
+        </button>
       </div>
 
       <!-- 리뷰 없음 -->
-      <div v-if="reviews.length === 0 && !reviewLoading" class="empty">
-        아직 작성된 리뷰가 없습니다.
-      </div>
+      <div v-if="reviews.length === 0 && !reviewLoading" class="empty">아직 작성된 리뷰가 없습니다.</div>
 
       <!-- 리뷰 카드 -->
-      <div
-        v-for="r in reviews"
-        :key="r.boardId"
-        class="review-card"
-        @click="goReviewDetail(r.boardId)"
-      >
+      <div v-for="r in reviews" :key="r.boardId" class="review-card" @click="goReviewDetail(r.boardId)">
         <div class="top">
           <h3 class="title">{{ r.title }}</h3>
           <span class="rating">⭐ {{ r.rating }}</span>
@@ -131,13 +141,7 @@
       </div>
 
       <!-- 더 보기 -->
-      <button
-        v-if="reviewPage < reviewTotalPages"
-        class="more-btn"
-        @click="loadMoreReviews"
-      >
-        더 보기
-      </button>
+      <button v-if="reviewPage < reviewTotalPages" class="more-btn" @click="loadMoreReviews">더 보기</button>
     </div>
   </section>
 </template>
@@ -156,6 +160,10 @@ import { getAttractionDetail, getAttractionImage } from "@/api/attraction";
 import { getReviewStats } from "@/api/board";
 import { getPlaceReviews } from "@/api/board";
 
+import saveIcon from "@/assets/icons/icon-save.png";
+import reviewIcon from "@/assets/icons/icon-write.png";
+import shareIcon from "@/assets/icons/icon-share.png";
+
 /* ======================
    BASIC SETUP
 ====================== */
@@ -171,7 +179,6 @@ const place = ref(null);
 const images = ref([]);
 const saved = ref(false);
 const bookmarkId = ref(null);
-
 
 //for review
 const isReviewOpen = ref(false);
@@ -206,7 +213,7 @@ const fetchImages = async () => {
   }
 };
 
-//review 
+//review
 const fetchReviews = async ({ reset = false } = {}) => {
   if (reviewLoading.value) return;
   reviewLoading.value = true;
@@ -232,7 +239,6 @@ const fetchReviews = async ({ reset = false } = {}) => {
     } else {
       reviews.value = [...reviews.value, ...data.list];
     }
-
   } catch (e) {
     console.error("리뷰 불러오기 실패", e);
   } finally {
@@ -262,11 +268,9 @@ const loadMoreReviews = async () => {
   await fetchReviews();
 };
 
-
 const goReviewDetail = (boardId) => {
   router.push(`/board/${boardId}`);
 };
-
 
 /* ======================
    BOOKMARK
@@ -353,12 +357,12 @@ const goWriteReview = () => {
   router.push({
     path: "/board/write",
     query: {
-      type: 2,                  // 2: 리뷰 작성 모드
-      contentId: contentId,     // 관광지 고유 ID
+      type: 2, // 2: 리뷰 작성 모드
+      contentId: contentId, // 관광지 고유 ID
       title: place.value.title, // 관광지 이름 (제목 자동입력용)
       addr1: place.value.addr1, // 주소 (정보 표시용)
-      mapx: place.value.mapx,   // 경도 (지도 표시용)
-      mapy: place.value.mapy    // 위도
+      mapx: place.value.mapx, // 경도 (지도 표시용)
+      mapy: place.value.mapy, // 위도
     },
   });
 };
@@ -385,7 +389,6 @@ const sharePlace = async () => {
     alert("공유에 실패했습니다.");
   }
 };
-
 
 /* ======================
    COMPUTED
@@ -452,11 +455,39 @@ onMounted(async () => {
   }
 }
 
+//저장, 공유 , 리뷰
 .action-bar {
   display: flex;
   justify-content: space-around;
+  padding: 24px 0;
+
+  background: #ffffff;
   border-bottom: 1px solid #eee;
-  padding: 20px 0;
+}
+
+.action-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+
+  font-size: 14px;
+  color: #333;
+}
+
+.action-icon {
+  width: 42px;
+  height: 42px;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.action-item:hover .action-icon {
+  transform: scale(1.12);
+}
+
+.action-icon.active {
+  filter: drop-shadow(0 0 6px rgba(255, 80, 80, 0.6));
 }
 
 .map {
@@ -544,7 +575,7 @@ onMounted(async () => {
 
   &:hover {
     transform: translateY(-2px);
-    box-shadow: 0 6px 16px rgba(0,0,0,0.06);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.06);
   }
 
   .top {
@@ -585,5 +616,4 @@ onMounted(async () => {
   font-weight: 700;
   cursor: pointer;
 }
-
 </style>
