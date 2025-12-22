@@ -1,7 +1,15 @@
 <template>
   <header class="navbar" :class="{ scrolled: isScrolled }">
     <nav class="nav-links">
+      <!-- LEFT: 로고 -->
       <div class="left">
+        <router-link to="/" class="logo">
+          <img src="@/assets/icons/moabwa.png" alt="모아봐 로고" />
+        </router-link>
+      </div>
+
+      <!-- CENTER: 메뉴 -->
+      <div class="center">
         <router-link to="/" class="nav-item">홈</router-link>
         <router-link to="/area" class="nav-item">지역별 보기</router-link>
         <router-link to="/board" class="nav-item">게시판</router-link>
@@ -10,16 +18,30 @@
       </div>
 
       <div class="right">
+        <!-- 비로그인 -->
         <template v-if="!userInfo">
           <router-link to="/login" class="login-btn">로그인</router-link>
         </template>
 
+        <!-- 로그인 -->
         <template v-else>
-          <span class="welcome-msg">
-            <b>{{ userInfo.nickName }}</b>님 환영합니다!
-          </span>
-          <router-link to="/mypage" class="nav-item">마이페이지</router-link>
-          <button @click="logout" class="logout-btn">로그아웃</button>
+          <div class="user-menu" ref="userMenuRef">
+            <!-- 트리거 -->
+            <button class="user-trigger" @click="toggleUserMenu">
+              <span class="nickname">{{ userInfo.nickName }}</span>
+              <span class="arrow" :class="{ open: isUserMenuOpen }">▾</span>
+            </button>
+
+            <!-- 드롭다운 -->
+            <div v-if="isUserMenuOpen" class="dropdown">
+              <router-link to="/mypage" class="dropdown-item" @click="closeUserMenu">
+                마이페이지
+              </router-link>
+              <button class="dropdown-item logout" @click="handleLogout">
+                로그아웃
+              </button>
+            </div>
+          </div>
         </template>
       </div>
     </nav>
@@ -37,6 +59,8 @@ const router = useRouter();
 const memberStore = useMemberStore();
 const { userInfo } = storeToRefs(memberStore);
 const { clearLoginUser } = memberStore;
+const isUserMenuOpen = ref(false);
+const userMenuRef = ref(null);
 
 /* ✅ 스크롤 상태 */
 const isScrolled = ref(false);
@@ -45,12 +69,35 @@ const handleScroll = () => {
   isScrolled.value = window.scrollY > 4;
 };
 
+//드롭다운 
+
+const toggleUserMenu = () => {
+  isUserMenuOpen.value = !isUserMenuOpen.value;
+};
+
+const closeUserMenu = () => {
+  isUserMenuOpen.value = false;
+};
+
+const handleClickOutside = (e) => {
+  if (userMenuRef.value && !userMenuRef.value.contains(e.target)) {
+    closeUserMenu();
+  }
+};
+
+const handleLogout = async () => {
+  closeUserMenu();
+  await logout();
+};
+
 onMounted(() => {
   window.addEventListener("scroll", handleScroll);
+  document.addEventListener("click", handleClickOutside);
 });
 
 onUnmounted(() => {
   window.removeEventListener("scroll", handleScroll);
+  document.removeEventListener("click", handleClickOutside);
 });
 
 /* 로그아웃 */
@@ -67,6 +114,10 @@ const logout = async () => {
 </script>
 
 <style lang="scss" scoped>
+
+/* =========================
+   NAVBAR
+========================= */
 .navbar {
   position: fixed;
   top: 0;
@@ -92,27 +143,151 @@ const logout = async () => {
   backdrop-filter: blur(8px);
 }
 
-
-/* 내부 정렬 */
+/* =========================
+   내부 정렬
+========================= */
 .nav-links {
+  position: relative;
   width: 100%;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+  height: 100%;
 }
 
+/* LEFT */
 .left {
-  display: flex;
-  gap: 24px;
+  position: absolute;
+  left: 20px;
+  top: 50%;
+  transform: translateY(-50%);
 }
 
+/* CENTER — 진짜 중앙 */
+.center {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  gap: 26px;
+}
+
+/* RIGHT */
 .right {
+  position: absolute;
+  right: 20px;
+  top: 50%;
+  transform: translateY(-50%);
   display: flex;
   align-items: center;
   gap: 16px;
 }
 
-/* 메뉴 링크 */
+/* =========================
+   USER DROPDOWN
+========================= */
+.user-menu {
+  position: relative;
+}
+
+.user-trigger {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+}
+
+.user-trigger:hover {
+  color: var(--primary-blue);
+}
+
+.arrow {
+  font-size: 12px;
+  transition: transform 0.2s ease;
+}
+
+.arrow.open {
+  transform: rotate(180deg);
+}
+
+/* 드롭다운 박스 */
+.dropdown {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  min-width: 140px;
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
+  padding: 6px;
+  z-index: 2000;
+}
+
+/* 항목 */
+.dropdown-item {
+  display: block;
+  width: 100%;
+  padding: 8px 12px;
+  text-align: left;
+  font-size: 13px;
+  font-weight: 500;
+  color: #333;
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.dropdown-item:hover {
+  background: #f1f5ff;
+  color: var(--primary-blue);
+}
+
+/* 로그아웃 강조 */
+.dropdown-item.logout {
+  color: #e03131;
+}
+
+.dropdown-item.logout:hover {
+  background: #fff5f5;
+  color: #c92a2a;
+}
+
+
+/* 로고 */
+.logo {
+  display: flex;
+  align-items: center;
+  margin-right: 6px;
+}
+
+.logo img {
+  height: 72px; 
+  width: auto;
+  cursor: pointer;
+  transition: transform 0.25s ease, filter 0.25s ease;
+}
+
+.logo:hover img {
+  transform: translateY(-1px) scale(1.04);
+  filter: drop-shadow(0 4px 8px rgba(79, 124, 255, 0.35));
+}
+
+/* 스크롤 시 로고 반응 */
+.navbar.scrolled .logo img {
+  transform: scale(0.95);
+  opacity: 0.95;
+}
+
+
+/* =========================
+   NAV ITEM
+========================= */
 .nav-item {
   position: relative;
   text-decoration: none;
@@ -120,21 +295,22 @@ const logout = async () => {
   font-weight: 600;
   font-size: 14px;
   padding: 4px 0;
+  transition: color 0.2s ease;
 }
 
 .nav-item::after {
   content: "";
   position: absolute;
   left: 0;
-  bottom: -6px;
+  bottom: -4px;
   width: 0%;
   height: 2px;
-  background-color: #2563eb;
+  background-color: var(--primary-blue);
   transition: width 0.25s ease;
 }
 
 .nav-item:hover {
-  color: #2563eb;
+  color: var(--primary-blue);
 }
 
 .nav-item:hover::after {
@@ -142,23 +318,31 @@ const logout = async () => {
 }
 
 .nav-item.router-link-active {
-  color: #2563eb;
+  color: var(--primary-blue-dark);
 }
 
 .nav-item.router-link-active::after {
   width: 100%;
 }
 
-/* 로그인 버튼 */
+/* =========================
+   LOGIN BUTTON
+========================= */
 .login-btn {
+  line-height: 1;
   padding: 8px 26px;
-  background: linear-gradient(135deg, #4f7cff, #2563eb);
+  background: linear-gradient(
+    135deg,
+    var(--primary-blue),
+    var(--primary-blue-dark)
+  );
   color: #fff;
   border-radius: 999px;
   font-size: 14px;
   font-weight: 700;
   text-decoration: none;
   box-shadow: 0 3px 8px rgba(79, 124, 255, 0.35);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .login-btn:hover {
@@ -166,7 +350,9 @@ const logout = async () => {
   box-shadow: 0 6px 14px rgba(79, 124, 255, 0.45);
 }
 
-/* 환영 문구 */
+/* =========================
+   USER AREA
+========================= */
 .welcome-msg {
   font-size: 13px;
   color: #555;
@@ -183,10 +369,12 @@ const logout = async () => {
   color: #868e96;
   border: 1px solid #dee2e6;
   cursor: pointer;
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
 .logout-btn:hover {
   background: #f8f9fa;
   color: #495057;
 }
+
 </style>
