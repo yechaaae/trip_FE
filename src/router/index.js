@@ -28,8 +28,9 @@ const routes = [
   { path: "/register", name: "Register", component: () => import("@/pages/RegisterPage.vue") },
 
   // ===== 마이페이지 =====
-  { path: "/mypage", name: "MyPage", component: () => import("@/pages/MyPage.vue") },
   { path: "/mypage/profile-edit", name: "ProfileEdit", component: () => import("@/pages/ProfileEditPage.vue") },
+  { path: "/mypage", name: "MyPage", component: () => import("@/pages/MyPage.vue") },
+
   {
     path: "/user/:userId",
     name: "UserProfile",
@@ -66,11 +67,10 @@ const routes = [
   },
 
   {
-  path: "/random",
-  name: "RandomPick",
-  component: () => import("@/pages/RandomPickPage.vue"),
+    path: "/random",
+    name: "RandomPick",
+    component: () => import("@/pages/RandomPickPage.vue"),
   },
-
 ];
 
 const router = createRouter({

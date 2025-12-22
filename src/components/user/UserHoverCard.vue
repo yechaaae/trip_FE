@@ -1,10 +1,5 @@
 <template>
-  <div
-    class="user-hover-wrapper"
-    @mouseenter="show = true"
-    @mouseleave="show = false"
-    @click.stop="goProfile"
-  >
+  <div class="user-hover-wrapper" @mouseenter="show = true" @mouseleave="show = false" @click.stop="goProfile">
     <span class="display-name">{{ user.nickName }}</span>
 
     <transition name="fade">

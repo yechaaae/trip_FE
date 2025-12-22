@@ -106,11 +106,21 @@ const showModal = ref(false);
 const modalSearchKeyword = ref("");
 const searchResults = ref([]);
 const isSearched = ref(false);
-
+const mySessionId = ref("");
 /* ======================
    EDIT MODE LOAD
 ====================== */
 onMounted(async () => {
+  const storedUser = sessionStorage.getItem("userInfo");
+  if (storedUser) {
+    try {
+      const parsed = JSON.parse(storedUser);
+      mySessionId.value = parsed.userId; // ID 저장
+    } catch (e) {
+      console.error("세션 파싱 실패", e);
+    }
+  }
+
   // CASE 1: 수정 모드일 때 (기존 글 불러오기)
   if (isEditMode.value) {
     try {
@@ -275,16 +285,26 @@ const submitReview = async () => {
         withCredentials: true,
       });
       alert("수정되었습니다.");
+      router.push("/board");
     } else {
       // 신규 작성
-      await axios.post("http://localhost:8080/api/board", formData, {
+      const { data } = await axios.post("http://localhost:8080/api/board", formData, {
         headers: { "Content-Type": "multipart/form-data" },
         withCredentials: true,
       });
-      alert("작성되었습니다.");
-    }
 
-    router.push("/board");
+      if (data.isNewBadge) {
+        if (confirm("🎉 새로운 지역 뱃지를 획득했습니다! 확인하러 가시겠습니까?")) {
+          router.push(`/mypage`);
+        } else {
+          router.push("/board");
+        }
+      } else {
+        // 이미 뱃지가 있는 지역이거나 자유글인 경우 바로 목록으로 이동
+        alert("작성되었습니다.");
+        router.push("/board");
+      }
+    }
   } catch (error) {
     console.error(error);
     alert("오류가 발생했습니다.");
