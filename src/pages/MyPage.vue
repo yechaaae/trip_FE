@@ -61,40 +61,29 @@
           <div
             v-for="review in myReviews"
             :key="review.boardId"
+            class="list-item"
             @click="router.push(`/board/${review.boardId}`)"
-            style="display: flex; gap: 15px; border-bottom: 1px solid #eee; padding: 15px 0; cursor: pointer"
           >
             <img
               v-if="review.saveFile"
               :src="getImageUrl(review.saveFile)"
-              style="width: 100px; height: 75px; object-fit: cover; border-radius: 6px; background: #eee"
+              class="list-thumb"
             />
-            <div
-              v-else
-              style="
-                width: 100px;
-                height: 75px;
-                background: #f0f0f0;
-                border-radius: 6px;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                font-size: 12px;
-                color: #aaa;
-              "
-            >
+            <div v-else class="list-thumb empty">
               이미지 없음
             </div>
 
-            <div style="flex: 1">
-              <h4 style="margin: 0 0 6px 0; font-size: 16px">
+            <div class="list-body">
+              <h4 class="list-title">
                 {{ review.title }}
               </h4>
-              <div style="font-size: 13px; color: #666; margin-bottom: 4px">
-                <span style="color: #f39c12; font-weight: bold">⭐ {{ review.rating }}</span>
+
+              <div class="list-meta">
+                <span class="rating">⭐ {{ review.rating }}</span>
                 &nbsp;|&nbsp; 조회수 {{ review.hit }}
               </div>
-              <div style="font-size: 12px; color: #999">
+
+              <div class="list-date">
                 {{ review.registDate ? review.registDate.split(" ")[0] : "" }}
               </div>
             </div>
@@ -108,36 +97,25 @@
           <div
             v-for="review in likedReviews"
             :key="review.boardId"
+            class="list-item"
             @click="router.push(`/board/${review.boardId}`)"
-            style="display: flex; gap: 15px; border-bottom: 1px solid #eee; padding: 15px 0; cursor: pointer"
           >
             <img
               v-if="review.saveFile"
               :src="getImageUrl(review.saveFile)"
-              style="width: 100px; height: 75px; object-fit: cover; border-radius: 6px; background: #eee"
+              class="list-thumb"
             />
-            <div
-              v-else
-              style="
-                width: 100px;
-                height: 75px;
-                background: #f0f0f0;
-                border-radius: 6px;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                font-size: 12px;
-                color: #aaa;
-              "
-            >
+
+            <div v-else class="list-thumb empty">
               이미지 없음
             </div>
-            <div style="flex: 1">
-              <h4 style="margin: 0 0 6px 0; font-size: 16px">
+            <div class="list-body">
+              <h4 class="list-title">
                 {{ review.title }}
               </h4>
-              <div style="font-size: 13px; color: #666; margin-bottom: 4px">
-                <span style="color: #f39c12; font-weight: bold">⭐ {{ review.rating }}</span>
+
+              <div class="list-meta">
+                <span class="rating">⭐ {{ review.rating }}</span>
                 &nbsp;|&nbsp; ❤️ {{ review.likeCount }} &nbsp;|&nbsp;
                 {{ review.nickName }}
               </div>
@@ -152,35 +130,25 @@
           <div
             v-for="place in savedPlaces"
             :key="place.bookmarkId"
+            class="list-item"
             @click="router.push(`/attraction/${place.contentId}`)"
-            style="display: flex; gap: 15px; border-bottom: 1px solid #eee; padding: 15px 0; cursor: pointer"
           >
             <img
               v-if="place.firstImage"
               :src="place.firstImage"
-              style="width: 80px; height: 80px; object-fit: cover; border-radius: 50%; border: 1px solid #eee"
+              class="place-thumb"
             />
-            <div
-              v-else
-              style="
-                width: 80px;
-                height: 80px;
-                background: #f0f0f0;
-                border-radius: 50%;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                font-size: 12px;
-                color: #aaa;
-              "
-            >
+
+            <div v-else class="place-thumb empty">
               No Image
             </div>
-            <div style="display: flex; flex-direction: column; justify-content: center">
-              <h4 style="margin: 0 0 5px 0; font-size: 16px">
+            <div class="list-body">
+              <h4 class="list-title">
                 {{ place.title }}
               </h4>
-              <p style="margin: 0; font-size: 13px; color: #666">📍 {{ place.addr1 }}</p>
+              <p class="list-meta">
+                📍 {{ place.addr1 }}
+              </p>
             </div>
           </div>
         </div>
@@ -444,17 +412,28 @@ const openModal = (type) => {
 </script>
 
 <style scoped lang="scss">
-/* 기존 CSS 유지 */
 .mypage-container {
   display: flex;
   height: calc(100vh - 60px);
+
+  max-width: 1200px;
+  margin: 16px auto 24px;
+
+  background: #ffffff;
+  border-radius: 14px;
+  border: 1px solid #eaeef5;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.04);
+
+  overflow: hidden;
 }
 
+
 .profile-section {
-  width: 280px;
-  border-right: 1px solid #e5e5e5;
-  padding: 28px;
-  background: #fafbff;
+  width: 320px;
+  flex-shrink: 0;
+  border-right: 1px solid #e6ebf2;
+  padding: 40px 24px;
+  background: #f4f6fd; 
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -486,6 +465,11 @@ const openModal = (type) => {
   line-height: 1.4;
   white-space: pre-wrap;
   padding: 0 10px;
+}
+
+.bio-empty {
+  color: #999;
+  font-style: italic;
 }
 
 .stats {
@@ -522,9 +506,12 @@ const openModal = (type) => {
 /* 오른쪽 콘텐츠 */
 .content-section {
   flex: 1;
-  padding: 32px;
-  overflow-y: auto;
+  max-width: 680px;
+  margin: 0 auto;        /* ⬅ 가운데로 모음 */
+  padding: 32px 24px;
 }
+
+
 
 .tabs {
   display: flex;
@@ -594,4 +581,89 @@ const openModal = (type) => {
 .follow-btn.following:hover {
   background: #d0d0d0;
 }
+
+/* =========================
+   LIST ITEM (공통)
+========================= */
+.list-item {
+  display: flex;
+  gap: 15px;
+  padding: 15px 0;
+  border-bottom: 1px solid #eee;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.list-item:hover {
+  background: #f8faff;
+}
+
+/* 리뷰 썸네일 */
+.list-thumb {
+  width: 100px;
+  height: 75px;
+  object-fit: cover;
+  border-radius: 6px;
+  background: #eee;
+  flex-shrink: 0;
+}
+
+.list-thumb.empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  color: #aaa;
+  background: #f0f0f0;
+}
+
+/* 관광지 썸네일 */
+.place-thumb {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid #eee;
+  background: #f0f0f0;
+  flex-shrink: 0;
+}
+
+.place-thumb.empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  color: #aaa;
+}
+
+/* 텍스트 영역 */
+.list-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.list-title {
+  margin: 0 0 6px 0;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.list-meta {
+  font-size: 13px;
+  color: #666;
+  margin-bottom: 4px;
+}
+
+.list-meta .rating {
+  color: #f39c12;
+  font-weight: 700;
+}
+
+.list-date {
+  font-size: 12px;
+  color: #999;
+}
+
 </style>
