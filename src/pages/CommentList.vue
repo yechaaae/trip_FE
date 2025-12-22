@@ -1,28 +1,9 @@
 <template>
   <div class="comment-container">
-    <h3>댓글 {{ comments.length }}개</h3>
-
-    <div class="comment-form">
-      <textarea
-        v-model="newComment"
-        placeholder="댓글을 남겨보세요."
-        @keyup.enter.prevent="submitComment(null)"
-      ></textarea>
-      <button
-        class="regist-btn"
-        @click="submitComment(null)"
-        :disabled="!newComment.trim()"
-      >
-        등록
-      </button>
-    </div>
+    <!-- <h3>댓글 {{ comments.length }}개</h3> -->
 
     <ul class="comment-list">
-      <li
-        v-for="comment in comments"
-        :key="comment.commentId"
-        class="comment-item"
-      >
+      <li v-for="comment in comments" :key="comment.commentId" class="comment-item">
         <div class="comment-content" :class="{ deleted: comment.isDeleted }">
           <div class="meta">
             <span class="author" @click="goProfile(comment.userId)">
@@ -40,9 +21,7 @@
           </div>
 
           <div v-else>
-            <p v-if="comment.isDeleted" class="deleted-msg">
-              삭제된 댓글입니다.
-            </p>
+            <p v-if="comment.isDeleted" class="deleted-msg">삭제된 댓글입니다.</p>
             <p v-else class="text">{{ comment.content }}</p>
 
             <div class="actions" v-if="!comment.isDeleted">
@@ -56,31 +35,18 @@
         </div>
 
         <div v-if="replyBoxId === comment.commentId" class="reply-form">
-          <textarea
-            v-model="replyContent"
-            placeholder="답글을 입력하세요."
-            ref="replyInput"
-          ></textarea>
+          <textarea v-model="replyContent" placeholder="답글을 입력하세요." ref="replyInput"></textarea>
           <div class="reply-actions">
             <button @click="submitComment(comment.commentId)">답글 등록</button>
             <button class="cancel" @click="replyBoxId = null">취소</button>
           </div>
         </div>
 
-        <ul
-          v-if="comment.children && comment.children.length > 0"
-          class="children-list"
-        >
-          <li
-            v-for="child in comment.children"
-            :key="child.commentId"
-            class="child-item"
-          >
+        <ul v-if="comment.children && comment.children.length > 0" class="children-list">
+          <li v-for="child in comment.children" :key="child.commentId" class="child-item">
             <div class="comment-content" :class="{ deleted: child.isDeleted }">
               <div class="meta">
-                <span class="author" @click="goProfile(child.userId)">
-                  ↳ {{ child.nickName || "익명" }}
-                </span>
+                <span class="author" @click="goProfile(child.userId)"> ↳ {{ child.nickName || "익명" }} </span>
                 <span class="date">{{ formatDate(child.createdAt) }}</span>
               </div>
 
@@ -93,15 +59,10 @@
               </div>
 
               <div v-else>
-                <p v-if="child.isDeleted" class="deleted-msg">
-                  삭제된 댓글입니다.
-                </p>
+                <p v-if="child.isDeleted" class="deleted-msg">삭제된 댓글입니다.</p>
                 <p v-else class="text">{{ child.content }}</p>
 
-                <div
-                  class="actions"
-                  v-if="!child.isDeleted && isOwner(child.userId)"
-                >
+                <div class="actions" v-if="!child.isDeleted && isOwner(child.userId)">
                   <button @click="openEdit(child)">수정</button>
                   <button @click="deleteComment(child.commentId)">삭제</button>
                 </div>
@@ -111,6 +72,16 @@
         </ul>
       </li>
     </ul>
+
+    <!-- 댓글 입력창을 댓글 목록 하단으로 이동 -->
+    <div class="comment-form">
+      <textarea
+        v-model="newComment"
+        placeholder="댓글을 남겨보세요."
+        @keyup.enter.prevent="submitComment(null)"
+      ></textarea>
+      <button class="regist-btn" @click="submitComment(null)" :disabled="!newComment.trim()">등록</button>
+    </div>
   </div>
 </template>
 
@@ -152,9 +123,7 @@ const isOwner = (writerId) => {
 /* --- 조회 --- */
 const fetchComments = async () => {
   try {
-    const { data } = await axios.get(
-      `http://localhost:8080/comment/${props.boardId}`
-    );
+    const { data } = await axios.get(`http://localhost:8080/comment/${props.boardId}`);
     comments.value = data;
   } catch (error) {
     console.error("댓글 로드 실패", error);
@@ -264,6 +233,7 @@ onMounted(() => {
   padding-top: 20px;
   border-top: 1px solid #eee;
 }
+
 .comment-form textarea {
   width: 100%;
   height: 80px;
@@ -272,6 +242,7 @@ onMounted(() => {
   border-radius: 5px;
   resize: none;
 }
+
 .regist-btn {
   margin-top: 10px;
   padding: 8px 16px;
@@ -286,17 +257,24 @@ onMounted(() => {
 .comment-list {
   list-style: none;
   padding: 0;
-  margin-top: 50px;
+  margin-top: 0px;
 }
+
 .comment-item {
   border-bottom: 1px solid #f1f1f1;
   padding: 15px 0;
 }
+
+.comment-item:first-child {
+  margin-top: 0; /* 첫 번째 댓글 항목에 여백이 생기는 문제 해결 */
+}
+
 .meta {
   font-size: 13px;
   color: #888;
   margin-bottom: 5px;
 }
+
 .author {
   font-weight: bold;
   color: #333;
@@ -320,6 +298,7 @@ onMounted(() => {
   margin-top: 8px;
   font-size: 13px;
 }
+
 .actions button {
   background: none;
   border: none;
@@ -328,6 +307,7 @@ onMounted(() => {
   margin-right: 10px;
   padding: 0;
 }
+
 .actions button:hover {
   color: #0066ff;
   text-decoration: underline;
@@ -341,13 +321,16 @@ onMounted(() => {
   background: #f9f9f9;
   border-radius: 8px;
 }
+
 .child-item {
   padding: 10px;
   border-top: 1px solid #eee;
 }
+
 .child-item:first-child {
   border-top: none;
 }
+
 .deleted-msg {
   color: #999;
   font-style: italic;
@@ -361,6 +344,7 @@ onMounted(() => {
   background: #f1f3f5;
   border-radius: 5px;
 }
+
 .reply-form textarea,
 .edit-box textarea {
   width: 100%;
@@ -370,6 +354,7 @@ onMounted(() => {
   background: white;
   resize: none;
 }
+
 .reply-actions,
 .edit-actions {
   display: flex;
@@ -377,6 +362,7 @@ onMounted(() => {
   gap: 5px;
   margin-top: 5px;
 }
+
 .reply-actions button,
 .edit-actions button {
   padding: 5px 10px;
@@ -386,6 +372,7 @@ onMounted(() => {
   background: #0066ff;
   color: white;
 }
+
 .reply-actions button.cancel,
 .edit-actions button.cancel {
   background: #ccc;
