@@ -34,13 +34,27 @@
 
             <!-- 드롭다운 -->
             <div v-if="isUserMenuOpen" class="dropdown">
-              <router-link to="/mypage" class="dropdown-item" @click="closeUserMenu">
-                마이페이지
-              </router-link>
-              <button class="dropdown-item logout" @click="handleLogout">
-                로그아웃
-              </button>
-            </div>
+  <router-link 
+    v-if="userInfo.role === 1" 
+    to="/admin/users" 
+    class="dropdown-item admin-item" 
+    @click="closeUserMenu"
+  >
+    관리자 콘솔
+  </router-link>
+
+  <router-link 
+    to="/mypage" 
+    class="dropdown-item" 
+    @click="closeUserMenu"
+  >
+    마이페이지
+  </router-link>
+
+  <button class="dropdown-item logout" @click="handleLogout">
+    로그아웃
+  </button>
+</div>
           </div>
         </template>
       </div>
@@ -377,18 +391,6 @@ const logout = async () => {
   color: #495057;
 }
 
-.admin-link {
-  color: #d32f2f; /* 관리자 강조용 빨간색 */
-  font-weight: 800;
-  text-decoration: none;
-  font-size: 13px;
-  border: 1px solid #d32f2f;
-  padding: 4px 8px;
-  border-radius: 4px;
-  margin-right: 8px;
-}
-.admin-link:hover {
-  background-color: #d32f2f;
-  color: white;
-}
+
+
 </style>
