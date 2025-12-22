@@ -27,18 +27,21 @@
 
     <!-- ACTION BAR -->
     <section class="action-bar">
+      <!-- 저장하기 -->
       <div class="action-item" @click="toggleSave">
-        <i :class="saved ? 'fa-solid fa-heart saved' : 'fa-regular fa-heart'"></i>
+        <img :src="saveIcon" class="action-icon" :class="{ active: saved }" alt="저장하기" />
         <span>{{ saved ? "저장됨" : "저장하기" }}</span>
       </div>
 
+      <!-- 리뷰쓰기 -->
       <div class="action-item" @click="goWriteReview">
-        <i class="fa-regular fa-star"></i>
+        <img :src="reviewIcon" class="action-icon" alt="리뷰쓰기" />
         <span>리뷰쓰기</span>
       </div>
 
+      <!-- 공유하기 -->
       <div class="action-item" @click="sharePlace">
-        <i class="fa-solid fa-share-nodes"></i>
+        <img :src="shareIcon" class="action-icon" alt="공유하기" />
         <span>공유하기</span>
       </div>
     </section>
@@ -156,6 +159,10 @@ import "swiper/css/pagination";
 import { getAttractionDetail, getAttractionImage } from "@/api/attraction";
 import { getReviewStats } from "@/api/board";
 import { getPlaceReviews } from "@/api/board";
+
+import saveIcon from "@/assets/icons/icon-save.png";
+import reviewIcon from "@/assets/icons/icon-write.png";
+import shareIcon from "@/assets/icons/icon-share.png";
 
 /* ======================
    BASIC SETUP
@@ -478,11 +485,39 @@ onMounted(async () => {
   }
 }
 
+//저장, 공유 , 리뷰
 .action-bar {
   display: flex;
   justify-content: space-around;
+  padding: 24px 0;
+
+  background: #ffffff;
   border-bottom: 1px solid #eee;
-  padding: 20px 0;
+}
+
+.action-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+
+  font-size: 14px;
+  color: #333;
+}
+
+.action-icon {
+  width: 42px;
+  height: 42px;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.action-item:hover .action-icon {
+  transform: scale(1.12);
+}
+
+.action-icon.active {
+  filter: drop-shadow(0 0 6px rgba(255, 80, 80, 0.6));
 }
 
 .map {
