@@ -1,21 +1,14 @@
 <template>
   <div class="mypage-container">
     <aside class="profile-section">
-      <div
-        class="avatar"
-        :style="
-          user.profileImg ? { backgroundImage: `url(${user.profileImg})` } : {}
-        "
-      ></div>
+      <div class="avatar" :style="user.profileImg ? { backgroundImage: `url(${user.profileImg})` } : {}"></div>
 
       <h2 class="nickname">{{ user.nickname }}</h2>
       <p class="bio">
         <span v-if="user.bio">{{ user.bio }}</span>
 
         <span v-else style="color: #999">
-          {{
-            isOtherUser ? "자기소개가 없습니다." : "자기소개를 입력해주세요."
-          }}
+          {{ isOtherUser ? "자기소개가 없습니다." : "자기소개를 입력해주세요." }}
         </span>
       </p>
 
@@ -31,22 +24,18 @@
         </div>
 
         <div class="stat">
-          <span class="number">{{ user.badges }}</span>
-          <span class="label">뱃지</span>
+          <div class="stat clickable" @click="openBadgeModal">
+            <span class="number">{{ user.badges }}</span> <span class="label">뱃지</span>
+          </div>
+
+          <BadgeListModal :isVisible="showBadgeModal" :badges="myBadges" @close="showBadgeModal = false" />
         </div>
       </div>
 
       <div style="width: 100%; margin-top: 15px">
-        <button v-if="!isOtherUser" class="edit-btn" @click="goProfileEdit">
-          프로필 설정
-        </button>
+        <button v-if="!isOtherUser" class="edit-btn" @click="goProfileEdit">프로필 설정</button>
 
-        <button
-          v-else
-          class="follow-btn"
-          :class="{ following: isFollowing }"
-          @click="toggleFollow"
-        >
+        <button v-else class="follow-btn" :class="{ following: isFollowing }" @click="toggleFollow">
           {{ isFollowing ? "팔로잉" : "팔로우" }}
         </button>
       </div>
@@ -54,59 +43,31 @@
 
     <section class="content-section">
       <div class="tabs">
-        <div
-          :class="['tab', { active: tab === 'myReviews' }]"
-          @click="tab = 'myReviews'"
-        >
+        <div :class="['tab', { active: tab === 'myReviews' }]" @click="tab = 'myReviews'">
           {{ isOtherUser ? "작성한 리뷰" : "내 리뷰 관리" }}
         </div>
 
         <template v-if="!isOtherUser">
-          <div
-            :class="['tab', { active: tab === 'likedReviews' }]"
-            @click="tab = 'likedReviews'"
-          >
-            좋아요 한 리뷰
-          </div>
-          <div
-            :class="['tab', { active: tab === 'savedPlaces' }]"
-            @click="tab = 'savedPlaces'"
-          >
-            저장한 관광지
-          </div>
+          <div :class="['tab', { active: tab === 'likedReviews' }]" @click="tab = 'likedReviews'">좋아요 한 리뷰</div>
+          <div :class="['tab', { active: tab === 'savedPlaces' }]" @click="tab = 'savedPlaces'">저장한 관광지</div>
         </template>
       </div>
 
       <div class="tab-content">
         <div v-if="tab === 'myReviews'">
-          <div
-            v-if="myReviews.length === 0"
-            style="color: #888; text-align: center; padding: 20px"
-          >
+          <div v-if="myReviews.length === 0" style="color: #888; text-align: center; padding: 20px">
             작성한 리뷰가 없습니다.
           </div>
           <div
             v-for="review in myReviews"
             :key="review.boardId"
             @click="router.push(`/board/${review.boardId}`)"
-            style="
-              display: flex;
-              gap: 15px;
-              border-bottom: 1px solid #eee;
-              padding: 15px 0;
-              cursor: pointer;
-            "
+            style="display: flex; gap: 15px; border-bottom: 1px solid #eee; padding: 15px 0; cursor: pointer"
           >
             <img
               v-if="review.saveFile"
               :src="getImageUrl(review.saveFile)"
-              style="
-                width: 100px;
-                height: 75px;
-                object-fit: cover;
-                border-radius: 6px;
-                background: #eee;
-              "
+              style="width: 100px; height: 75px; object-fit: cover; border-radius: 6px; background: #eee"
             />
             <div
               v-else
@@ -130,9 +91,7 @@
                 {{ review.title }}
               </h4>
               <div style="font-size: 13px; color: #666; margin-bottom: 4px">
-                <span style="color: #f39c12; font-weight: bold"
-                  >⭐ {{ review.rating }}</span
-                >
+                <span style="color: #f39c12; font-weight: bold">⭐ {{ review.rating }}</span>
                 &nbsp;|&nbsp; 조회수 {{ review.hit }}
               </div>
               <div style="font-size: 12px; color: #999">
@@ -143,34 +102,19 @@
         </div>
 
         <div v-if="tab === 'likedReviews' && !isOtherUser">
-          <div
-            v-if="likedReviews.length === 0"
-            style="color: #888; text-align: center; padding: 20px"
-          >
+          <div v-if="likedReviews.length === 0" style="color: #888; text-align: center; padding: 20px">
             좋아요 한 리뷰가 없습니다.
           </div>
           <div
             v-for="review in likedReviews"
             :key="review.boardId"
             @click="router.push(`/board/${review.boardId}`)"
-            style="
-              display: flex;
-              gap: 15px;
-              border-bottom: 1px solid #eee;
-              padding: 15px 0;
-              cursor: pointer;
-            "
+            style="display: flex; gap: 15px; border-bottom: 1px solid #eee; padding: 15px 0; cursor: pointer"
           >
             <img
               v-if="review.saveFile"
               :src="getImageUrl(review.saveFile)"
-              style="
-                width: 100px;
-                height: 75px;
-                object-fit: cover;
-                border-radius: 6px;
-                background: #eee;
-              "
+              style="width: 100px; height: 75px; object-fit: cover; border-radius: 6px; background: #eee"
             />
             <div
               v-else
@@ -193,9 +137,7 @@
                 {{ review.title }}
               </h4>
               <div style="font-size: 13px; color: #666; margin-bottom: 4px">
-                <span style="color: #f39c12; font-weight: bold"
-                  >⭐ {{ review.rating }}</span
-                >
+                <span style="color: #f39c12; font-weight: bold">⭐ {{ review.rating }}</span>
                 &nbsp;|&nbsp; ❤️ {{ review.likeCount }} &nbsp;|&nbsp;
                 {{ review.nickName }}
               </div>
@@ -204,34 +146,19 @@
         </div>
 
         <div v-if="tab === 'savedPlaces' && !isOtherUser">
-          <div
-            v-if="savedPlaces.length === 0"
-            style="color: #888; text-align: center; padding: 20px"
-          >
+          <div v-if="savedPlaces.length === 0" style="color: #888; text-align: center; padding: 20px">
             저장한 관광지가 없습니다.
           </div>
           <div
             v-for="place in savedPlaces"
             :key="place.bookmarkId"
             @click="router.push(`/attraction/${place.contentId}`)"
-            style="
-              display: flex;
-              gap: 15px;
-              border-bottom: 1px solid #eee;
-              padding: 15px 0;
-              cursor: pointer;
-            "
+            style="display: flex; gap: 15px; border-bottom: 1px solid #eee; padding: 15px 0; cursor: pointer"
           >
             <img
               v-if="place.firstImage"
               :src="place.firstImage"
-              style="
-                width: 80px;
-                height: 80px;
-                object-fit: cover;
-                border-radius: 50%;
-                border: 1px solid #eee;
-              "
+              style="width: 80px; height: 80px; object-fit: cover; border-radius: 50%; border: 1px solid #eee"
             />
             <div
               v-else
@@ -249,31 +176,18 @@
             >
               No Image
             </div>
-            <div
-              style="
-                display: flex;
-                flex-direction: column;
-                justify-content: center;
-              "
-            >
+            <div style="display: flex; flex-direction: column; justify-content: center">
               <h4 style="margin: 0 0 5px 0; font-size: 16px">
                 {{ place.title }}
               </h4>
-              <p style="margin: 0; font-size: 13px; color: #666">
-                📍 {{ place.addr1 }}
-              </p>
+              <p style="margin: 0; font-size: 13px; color: #666">📍 {{ place.addr1 }}</p>
             </div>
           </div>
         </div>
       </div>
     </section>
 
-    <FollowModal
-      :isVisible="showModal"
-      :type="modalType"
-      :userId="user.userId"
-      @close="showModal = false"
-    />
+    <FollowModal :isVisible="showModal" :type="modalType" :userId="user.userId" @close="showModal = false" />
   </div>
 </template>
 
@@ -283,7 +197,8 @@ import { useRouter } from "vue-router";
 import { useRoute } from "vue-router";
 import axios from "axios";
 import FollowModal from "@/pages/FollowModal.vue";
-
+import { getMyBadges, getUserBadges } from "@/api/badge"; // API 가져오기
+import BadgeListModal from "@/pages/BadgeListModal.vue"; // 모달 가져오기
 const api = axios.create({
   baseURL: "http://localhost:8080",
   withCredentials: true,
@@ -302,6 +217,9 @@ const modalType = ref("follower");
 // ★ 데이터 저장용 변수 추가
 const myReviews = ref([]);
 const savedPlaces = ref([]);
+
+const showBadgeModal = ref(false);
+const myBadges = ref([]); // 실제 뱃지 리스트 담을 곳
 
 const user = ref({
   userId: "",
@@ -381,8 +299,14 @@ const loadPage = async () => {
     likedReviews.value = [];
     savedPlaces.value = [];
 
-    // ※ 백엔드에 '타인 작성글 조회' API가 있다면 여기서 호출해서 myReviews에 넣어주세요.
-    // 예: axios.get(`/api/board/user/${paramId}`)
+    try {
+      const res = await getUserBadges(paramId);
+      myBadges.value = res.data; // 뱃지 리스트 저장
+      user.value.badges = res.data.length; // 뱃지 개수 업데이트!
+    } catch (e) {
+      console.error("타인 뱃지 조회 실패", e);
+      user.value.badges = 0;
+    }
   }
 };
 
@@ -438,10 +362,7 @@ const fetchMyInfo = async () => {
     const res = await api.get("/user/info");
     setUserInfo(res.data);
   } catch (error) {
-    if (
-      error.response &&
-      (error.response.status === 401 || error.response.status === 204)
-    ) {
+    if (error.response && (error.response.status === 401 || error.response.status === 204)) {
       alert("로그인이 필요합니다.");
       router.push("/login");
     } else {
@@ -497,9 +418,18 @@ const fetchMyActivity = async () => {
 
     const likeRes = await api.get("/api/mypage/like");
     likedReviews.value = likeRes.data;
+
+    const badgeRes = await getMyBadges();
+    myBadges.value = badgeRes.data;
+
+    user.value.badges = myBadges.value.length;
   } catch (error) {
     console.error("내 활동 로딩 실패:", error);
   }
+};
+
+const openBadgeModal = () => {
+  showBadgeModal.value = true;
 };
 
 // 프로필 수정

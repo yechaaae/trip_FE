@@ -6,20 +6,12 @@
         <div class="map-wrapper">
           <!-- FILTER BAR -->
           <div class="filter-bar">
-            <button
-              class="filter-btn"
-              :class="{ active: filters.saved }"
-              @click="toggleFilter('saved')"
-            >
+            <button class="filter-btn" :class="{ active: filters.saved }" @click="toggleFilter('saved')">
               <i class="fa-solid fa-heart"></i>
               저장
             </button>
 
-            <button
-              class="filter-btn"
-              :class="{ active: filters.reviewed }"
-              @click="toggleFilter('reviewed')"
-            >
+            <button class="filter-btn" :class="{ active: filters.reviewed }" @click="toggleFilter('reviewed')">
               <i class="fa-solid fa-pen"></i>
               리뷰
             </button>
@@ -34,11 +26,18 @@
       <aside class="badge-card">
         <h2>🏅 나의 뱃지함</h2>
 
-        <div class="badge-list">
-          <div class="badge-item" v-for="n in 9" :key="n">
-            <div class="badge-circle"></div>
-            <p>뱃지 {{ n }}</p>
+        <div class="badge-list" v-if="myBadges.length > 0">
+          <div class="badge-item" v-for="badge in myBadges" :key="badge.badgeId">
+            <div class="badge-circle">
+              <img :src="getImageUrl(badge.image)" alt="뱃지" />
+            </div>
+            <p>{{ badge.name }}</p>
           </div>
+        </div>
+
+        <div v-else class="empty-badge">
+          <p>획득한 뱃지가 없습니다. 😢</p>
+          <small>리뷰를 남기고 지역 뱃지를 모아보세요!</small>
         </div>
       </aside>
     </div>
@@ -46,13 +45,34 @@
 </template>
 
 <script setup>
-import { reactive } from "vue";
+import { reactive, ref, onMounted } from "vue";
 import MapView from "@/components/MapView.vue";
+import { getMyBadges } from "@/api/badge";
 
 const filters = reactive({
   saved: false,
   reviewed: false,
 });
+
+// [수정] 변수 선언이 빠져 있었습니다.
+const myBadges = ref([]);
+
+onMounted(async () => {
+  try {
+    const { data } = await getMyBadges();
+    myBadges.value = data;
+  } catch (error) {
+    console.log("뱃지 로딩 실패(비로그인 등):", error);
+    myBadges.value = [];
+  }
+});
+
+// 이미지 경로 처리
+const getImageUrl = (path) => {
+  if (!path) return "/tmpimg.png";
+  if (path.startsWith("http")) return path;
+  return `http://localhost:8080${path}`;
+};
 
 const toggleFilter = (type) => {
   filters[type] = !filters[type];
@@ -129,20 +149,46 @@ const toggleFilter = (type) => {
     cursor: pointer;
 
     .badge-circle {
+      /* 기존 속성 유지 */
       width: 70px;
       height: 70px;
       border-radius: 50%;
       background: #dbe6ff;
-      transition: transform 0.2s ease;
+      overflow: hidden; /* 이미지가 튀어나가지 않게 */
+      border: 2px solid #fff;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+
+      img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
     }
 
     p {
-      font-size: 14px;
-      margin-top: 6px;
+      text-align: center;
+      font-weight: 600;
+      color: #444;
+      font-size: 13px;
+      /* 긴 이름 말줄임 처리 */
+      width: 100%;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
+  }
 
-    &:hover .badge-circle {
-      transform: scale(1.08);
+  .empty-badge {
+    text-align: center;
+    color: #888;
+    margin-top: 40px;
+
+    p {
+      font-weight: bold;
+      margin-bottom: 6px;
+    }
+    small {
+      font-size: 13px;
     }
   }
 }
