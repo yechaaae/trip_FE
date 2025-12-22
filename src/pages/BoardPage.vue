@@ -3,109 +3,77 @@
     <h1>{{ currentType === 2 ? "여행 후기" : "자유 게시판" }}</h1>
 
     <div class="tab-menu">
-      <button :class="{ active: currentType === 2 }" @click="changeTab(2)">
-        📸 여행 후기
-      </button>
-      <button :class="{ active: currentType === 1 }" @click="changeTab(1)">
-        🗣️ 자유 게시판
-      </button>
+      <button :class="{ active: currentType === 2 }" @click="changeTab(2)">📸 여행 후기</button>
+      <button :class="{ active: currentType === 1 }" @click="changeTab(1)">🗣️ 자유 게시판</button>
     </div>
 
     <div class="top-controls">
-      <div class="filter-dropdowns">
-        <select v-model="sidoCode" @change="getArticles">
-          <option :value="0">📍 전지역</option>
-          <option v-for="sido in sidos" :key="sido.code" :value="sido.code">
-            {{ sido.name }}
-          </option>
-        </select>
+      <div class="filter-container">
+        <label class="checkbox-label" title="로그인이 필요합니다">
+          <input type="checkbox" v-model="onlyFollowing" @change="getArticles" />
+          <span>❤️ 내 팔로우만</span>
+        </label>
 
-        <select v-model="contentTypeId" @change="getArticles">
-          <option :value="0">🏷️ 모든 테마</option>
-          <option
-            v-for="type in contentTypes"
-            :key="type.code"
-            :value="type.code"
-          >
-            {{ type.name }}
-          </option>
-        </select>
+        <div class="vertical-divider"></div>
+        <div class="date-range">
+          <input type="date" v-model="startDate" @change="getArticles" placeholder="시작일" />
+          <span class="tilde">~</span>
+          <input type="date" v-model="endDate" @change="getArticles" placeholder="종료일" />
+        </div>
       </div>
-      <div class="search-box-wrapper">
-        <div class="search-box">
-          <input
-            type="text"
-            v-model="searchWord"
-            @input="onSearchInput"
-            @keyup.enter="getArticles"
-            placeholder="검색어를 입력하세요..."
-          />
-          <button @click="getArticles">검색</button>
+
+      <div class="right-controls">
+        <div class="search-box-wrapper">
+          <div class="search-box">
+            <input
+              type="text"
+              v-model="searchWord"
+              @input="onSearchInput"
+              @keyup.enter="getArticles"
+              placeholder="검색어 입력"
+            />
+            <button class="icon-btn search-btn" @click="getArticles">🔍</button>
+          </div>
+          <ul v-if="suggestions.length > 0 && showSuggestions" class="suggestions-list">
+            <li v-for="(item, index) in suggestions" :key="index" @click="selectSuggestion(item)">🔍 {{ item }}</li>
+          </ul>
         </div>
 
-        <ul
-          v-if="suggestions.length > 0 && showSuggestions"
-          class="suggestions-list"
-        >
-          <li
-            v-for="(item, index) in suggestions"
-            :key="index"
-            @click="selectSuggestion(item)"
-          >
-            🔍 {{ item }}
-          </li>
-        </ul>
-      </div>
+        <div class="sort-box">
+          <select v-model="sortOrder" @change="getArticles">
+            <option value="latest">최신순</option>
+            <option value="views">조회수순</option>
+            <option value="comments">댓글순</option>
+            <option value="likes">좋아요순</option>
+          </select>
+        </div>
 
-      <div class="sort-group">
-        <select v-model="sortOrder" @change="getArticles">
-          <option value="latest">최신순</option>
-          <option value="views">조회수순</option>
-          <option value="comments">댓글순</option>
-          <option value="likes">좋아요순</option>
-        </select>
+        <button class="write-btn" @click="goWrite">
+          {{ currentType === 2 ? "✏️ 리뷰 작성" : "✏️ 글 작성" }}
+        </button>
       </div>
-
-      <button class="write-btn" @click="goWrite">
-        {{ currentType === 2 ? "✍️ 리뷰 작성하기" : "✍️ 글 작성하기" }}
-      </button>
     </div>
 
     <div @click="showSuggestions = false">
       <div v-if="currentType === 2" class="review-feed">
-        <div
-          class="review-card"
-          v-for="article in articles"
-          :key="article.boardId"
-          @click="goDetail(article.boardId)"
-        >
+        <div class="review-card" v-for="article in articles" :key="article.boardId" @click="goDetail(article.boardId)">
           <h2 class="place">{{ article.title }}</h2>
-
           <img
             v-if="article.saveFile"
             :src="`http://localhost:8080/upload/${article.saveFile}`"
             class="photo-img"
             alt="리뷰 사진"
           />
-          <div v-else class="photo-placeholder"></div>
-
           <div class="rating">⭐ {{ article.rating }} / 5.0</div>
-          <p class="content preview-text">
-            {{ article.content }}
-          </p>
+          <p class="content preview-text">{{ article.content }}</p>
 
           <div class="actions" @click.stop>
             <button class="like-btn">❤️ {{ article.likeCount }}</button>
-            <button class="comment-btn">
-              💬 {{ article.commentCount || 0 }}
-            </button>
+            <button class="comment-btn">💬 {{ article.commentCount || 0 }}</button>
             <span class="views">👀 {{ article.hit }}</span>
             <span class="writer">
               by
-              <span
-                class="nickname-link"
-                @click.stop="goProfile(article.userId)"
-              >
+              <span class="nickname-link" @click.stop="goProfile(article.userId)">
                 {{ article.nickName }}
               </span>
               · {{ article.registDate ? article.registDate.split(" ")[0] : "" }}
@@ -114,47 +82,36 @@
         </div>
       </div>
 
-      <div v-else class="free-board-list">
-        <table>
-          <thead>
-            <tr>
-              <th width="8%">번호</th>
-              <th width="40%">제목</th>
-              <th width="12%">작성자</th>
-              <th width="8%">좋아요</th>
-              <th width="8%">댓글</th>
-              <th width="14%">작성일</th>
-              <th width="10%">조회</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr
-              v-for="article in articles"
-              :key="article.boardId"
-              @click="goDetail(article.boardId)"
-            >
-              <td>{{ article.boardId }}</td>
-              <td class="title-td">{{ article.title }}</td>
-              <td
-                @click.stop="goProfile(article.userId)"
-                class="clickable-writer"
-              >
+      <div v-else class="review-feed">
+        <div class="review-card" v-for="article in articles" :key="article.boardId" @click="goDetail(article.boardId)">
+          <h2 class="place">{{ article.title }}</h2>
+
+          <img
+            v-if="article.saveFile"
+            :src="`http://localhost:8080/upload/${article.saveFile}`"
+            class="photo-img"
+            alt="게시글 사진"
+          />
+
+          <p class="content preview-text">{{ article.content }}</p>
+
+          <div class="actions" @click.stop>
+            <button class="like-btn">❤️ {{ article.likeCount }}</button>
+            <button class="comment-btn">💬 {{ article.commentCount || 0 }}</button>
+            <span class="views">👀 {{ article.hit }}</span>
+            <span class="writer">
+              by
+              <span class="nickname-link" @click.stop="goProfile(article.userId)">
                 {{ article.nickName }}
-              </td>
+              </span>
+              · {{ article.registDate ? article.registDate.split(" ")[0] : "" }}
+            </span>
+          </div>
+        </div>
+      </div>
 
-              <td>❤️ {{ article.likeCount }}</td>
-              <td>💬 {{ article.commentCount || 0 }}</td>
-
-              <td>
-                {{ article.registDate ? article.registDate.split(" ")[0] : "" }}
-              </td>
-              <td>{{ article.hit }}</td>
-            </tr>
-            <tr v-if="articles.length === 0">
-              <td colspan="5" class="empty-msg">작성된 글이 없습니다.</td>
-            </tr>
-          </tbody>
-        </table>
+      <div v-if="articles.length === 0" class="empty-feed-msg">
+        {{ currentType === 2 ? "작성된 리뷰가 없습니다. 📸" : "작성된 글이 없습니다. 📝" }}
       </div>
     </div>
   </div>
@@ -170,41 +127,9 @@ const articles = ref([]);
 const currentType = ref(2); // 기본값 2 (리뷰 게시판)
 const searchWord = ref("");
 
-// 🔥 [추가] 필터 관련 상태 변수
-const sidoCode = ref(0); // 0이면 전체
-const contentTypeId = ref(0); // 0이면 전체
-
-// 🔥 [추가] 하드코딩된 데이터 리스트
-const sidos = [
-  { code: 1, name: "서울" },
-  { code: 2, name: "인천" },
-  { code: 3, name: "대전" },
-  { code: 4, name: "대구" },
-  { code: 5, name: "광주" },
-  { code: 6, name: "부산" },
-  { code: 7, name: "울산" },
-  { code: 8, name: "세종" },
-  { code: 31, name: "경기" },
-  { code: 32, name: "강원" },
-  { code: 33, name: "충북" },
-  { code: 34, name: "충남" },
-  { code: 35, name: "경북" },
-  { code: 36, name: "경남" },
-  { code: 37, name: "전북" },
-  { code: 38, name: "전남" },
-  { code: 39, name: "제주" },
-];
-
-const contentTypes = [
-  { code: 12, name: "관광지" },
-  { code: 14, name: "문화시설" },
-  { code: 15, name: "축제/공연" },
-  { code: 25, name: "여행코스" },
-  { code: 28, name: "레포츠" },
-  { code: 32, name: "숙박" },
-  { code: 38, name: "쇼핑" },
-  { code: 39, name: "음식점" },
-];
+const onlyFollowing = ref(false);
+const startDate = ref("");
+const endDate = ref("");
 
 // 🔥 [추가된 변수] 정렬 및 자동완성 관련
 const sortOrder = ref("latest");
@@ -221,9 +146,11 @@ const getArticles = async () => {
         word: searchWord.value,
         sort: sortOrder.value, // 🔥 [수정] 정렬 기준 추가 전송
 
-        sido: sidoCode.value,
-        content: contentTypeId.value,
+        onlyFollowing: onlyFollowing.value,
+        startDate: startDate.value || null,
+        endDate: endDate.value || null,
       },
+      withCredentials: true,
     });
     articles.value = data;
     showSuggestions.value = false; // 검색 후 자동완성 닫기
@@ -244,8 +171,9 @@ const changeTab = (type) => {
   searchWord.value = ""; // 탭 변경 시 검색어 초기화
   sortOrder.value = "latest"; // 🔥 [추가] 탭 변경 시 정렬 초기화
 
-  sidoCode.value = 0;
-  contentTypeId.value = 0;
+  onlyFollowing.value = false;
+  startDate.value = "";
+  endDate.value = "";
   getArticles();
 };
 
@@ -260,12 +188,9 @@ const onSearchInput = () => {
       return;
     }
     try {
-      const { data } = await axios.get(
-        "http://localhost:8080/api/board/search",
-        {
-          params: { keyword: searchWord.value },
-        }
-      );
+      const { data } = await axios.get("http://localhost:8080/api/board/search", {
+        params: { keyword: searchWord.value },
+      });
       suggestions.value = data;
       showSuggestions.value = true;
     } catch (e) {
@@ -296,35 +221,44 @@ onMounted(() => {
 </script>
 
 <style scoped lang="scss">
-/* 기존 스타일 유지 */
+/* =========================================
+   1. 전체 레이아웃 & 탭 메뉴
+   ========================================= */
 .board-container {
-  max-width: 760px;
+  max-width: 900px; /* 너비를 조금 더 넓혀서 여유 있게 */
   margin: 0 auto;
-  padding: 32px 18px;
+  padding: 40px 20px;
 
   h1 {
     text-align: center;
-    margin-bottom: 20px;
+    margin-bottom: 30px;
+    font-size: 28px;
+    font-weight: 700;
+    color: #333;
   }
 }
 
-/* 탭 메뉴 스타일 추가 */
 .tab-menu {
   display: flex;
   justify-content: center;
-  gap: 10px;
-  margin-bottom: 30px;
+  gap: 12px;
+  margin-bottom: 40px;
 }
 
 .tab-menu button {
-  padding: 10px 24px;
-  border: 1px solid #d4d9e3;
+  padding: 12px 28px;
+  border: 1px solid #e1e4e8;
   background: #f8f9fa;
   color: #666;
-  border-radius: 20px;
+  border-radius: 30px; /* 둥근 캡슐 모양 */
   font-size: 16px;
+  font-weight: 500;
   cursor: pointer;
-  transition: 0.2s;
+  transition: all 0.2s ease;
+}
+
+.tab-menu button:hover {
+  background: #eef1f5;
 }
 
 .tab-menu button.active {
@@ -332,111 +266,262 @@ onMounted(() => {
   color: white;
   border-color: #0066ff;
   font-weight: bold;
+  box-shadow: 0 4px 10px rgba(0, 102, 255, 0.3);
 }
 
-/* 상단 컨트롤(검색+글쓰기) */
+/* =========================================
+   2. [NEW] 상단 컨트롤 바 (필터, 검색, 정렬)
+   ========================================= */
 .top-controls {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
-  gap: 10px; /* 요소 간 간격 추가 */
+  align-items: center; /* 수직 중앙 정렬 핵심 */
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 24px;
 }
 
-/* 🔥 [수정] 검색창 박스 + 자동완성 감싸기 */
-.search-box-wrapper {
-  position: relative; /* 자동완성 목록 기준점 */
+/* 2-1. 좌측 필터 그룹 (흰색 박스로 감싸기) */
+.filter-container {
   display: flex;
-  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  background: #fff;
+  border: 1px solid #dcdfe6;
+  padding: 0 20px;
+  height: 44px; /* 높이 고정 */
+  border-radius: 8px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.03);
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #444;
+  cursor: pointer;
+  user-select: none;
+}
+
+.checkbox-label input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: #ff4081;
+  cursor: pointer;
+}
+
+.vertical-divider {
+  width: 1px;
+  height: 20px;
+  background-color: #e0e0e0;
+}
+
+.date-range {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.date-range input[type="date"] {
+  border: none;
+  font-size: 14px;
+  color: #555;
+  background: transparent;
+  outline: none;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.tilde {
+  color: #aaa;
+  font-weight: bold;
+}
+
+/* 2-2. 우측 컨트롤 그룹 */
+.right-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* 검색창 */
+.search-box-wrapper {
+  position: relative;
 }
 
 .search-box {
   display: flex;
-  gap: 8px;
-
-  input {
-    padding: 8px 12px;
-    border: 1px solid #d4d9e3;
-    border-radius: 6px;
-  }
-  button {
-    padding: 8px 14px;
-    border: 1px solid #d4d9e3;
-    background: white;
-    border-radius: 6px;
-    cursor: pointer;
-  }
+  align-items: center;
+  border: 1px solid #dcdfe6;
+  border-radius: 8px;
+  background: #fff;
+  height: 44px; /* 높이 통일 */
+  padding: 0 8px 0 16px;
+  transition: border-color 0.2s;
 }
 
-.write-btn {
-  /* 기존 마진 제거 후 상단바에 맞춤 */
-  margin: 0;
-  padding: 10px 18px;
+.search-box:focus-within {
+  border-color: #0066ff;
+  box-shadow: 0 0 0 3px rgba(0, 102, 255, 0.1);
+}
+
+.search-box input {
   border: none;
-  border-radius: 6px;
-  background: #0066ff;
+  outline: none;
+  font-size: 14px;
+  width: 160px;
+}
+
+.icon-btn.search-btn {
+  background: transparent;
+  border: none;
+  font-size: 18px;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.icon-btn.search-btn:hover {
+  background: #f0f2f5;
+}
+
+/* 자동완성 목록 */
+.suggestions-list {
+  position: absolute;
+  top: 50px;
+  left: 0;
+  width: 100%;
+  min-width: 200px;
+  background: white;
+  border: 1px solid #e1e4e8;
+  border-radius: 8px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  list-style: none;
+  padding: 8px 0;
+  z-index: 1000;
+  max-height: 240px;
+  overflow-y: auto;
+}
+
+.suggestions-list li {
+  padding: 10px 16px;
+  font-size: 14px;
+  cursor: pointer;
+  color: #333;
+}
+
+.suggestions-list li:hover {
+  background: #f5f7fa;
+  color: #0066ff;
+}
+
+/* 정렬 셀렉트 박스 */
+.sort-box select {
+  height: 44px; /* 높이 통일 */
+  border: 1px solid #dcdfe6;
+  border-radius: 8px;
+  padding: 0 36px 0 16px;
+  font-size: 14px;
+  color: #555;
+  background-color: #fff;
+  cursor: pointer;
+  outline: none;
+}
+
+.sort-box select:focus {
+  border-color: #0066ff;
+}
+
+/* 글쓰기 버튼 */
+.write-btn {
+  height: 44px; /* 높이 통일 */
+  padding: 0 24px;
+  background-color: #0066ff;
   color: white;
   font-size: 15px;
+  font-weight: 600;
+  border: none;
+  border-radius: 8px;
   cursor: pointer;
+  white-space: nowrap;
+  box-shadow: 0 4px 12px rgba(0, 102, 255, 0.25);
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-/* --- 리뷰 게시판 스타일 (기존 유지) --- */
+.write-btn:hover {
+  background-color: #0056d6;
+  transform: translateY(-1px);
+}
+
+.write-btn:active {
+  transform: translateY(0);
+}
+
+/* =========================================
+   3. 리뷰 피드 (카드 형태)
+   ========================================= */
 .review-feed {
   display: flex;
   flex-direction: column;
-  gap: 28px;
+  gap: 24px;
 }
 
 .review-card {
-  border: 1px solid #d4d9e3;
-  border-radius: 12px;
+  border: 1px solid #e1e4e8;
+  border-radius: 16px;
   background: #fff;
-  padding: 22px 24px;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.06);
+  padding: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
   cursor: pointer;
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  transition: all 0.2s ease;
 }
 
 .review-card:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.09);
+  transform: translateY(-4px);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.08);
+  border-color: #cdd2d9;
 }
 
 .place {
   font-size: 20px;
-  margin-bottom: 14px;
-  font-weight: bold;
+  margin-bottom: 16px;
+  font-weight: 700;
+  color: #1a1a1a;
 }
+
 .photo-img {
   width: 100%;
-  height: 260px;
+  height: 280px;
   object-fit: cover;
-  border-radius: 10px;
+  border-radius: 12px;
   margin-bottom: 16px;
+  border: 1px solid #f0f0f0;
 }
-.photo-placeholder {
-  width: 100%;
-  height: 260px;
-  border-radius: 10px;
-  background: #c9d5eb;
-  margin-bottom: 16px;
-}
+
 .rating {
   font-size: 16px;
   margin-bottom: 12px;
-  color: #ffbf00;
-  font-weight: bold;
+  color: #f5a623;
+  font-weight: 800;
 }
 
 .preview-text {
   font-size: 15px;
-  line-height: 1.5;
-  color: #555;
-  margin-bottom: 18px;
+  line-height: 1.6;
+  color: #4a5568;
+  margin-bottom: 20px;
   overflow: hidden;
   text-overflow: ellipsis;
   display: -webkit-box;
-  -webkit-line-clamp: 2; /* 2줄까지만 표시 */
+  -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
 }
 
@@ -444,53 +529,87 @@ onMounted(() => {
   display: flex;
   gap: 12px;
   align-items: center;
+  border-top: 1px solid #f0f0f0;
+  padding-top: 16px;
 }
+
 .like-btn,
 .comment-btn {
-  padding: 6px 12px;
+  padding: 8px 14px;
   border: none;
-  border-radius: 6px;
+  border-radius: 8px;
   cursor: pointer;
   font-size: 14px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
+
 .like-btn {
-  background: #ffe2e5;
-  color: #d63346;
+  background: #fff0f2;
+  color: #e53e3e;
 }
+
 .comment-btn {
-  background: #eaf1ff;
-  color: #0066ff;
+  background: #ebf8ff;
+  color: #3182ce;
 }
+
+.views {
+  font-size: 14px;
+  color: #718096;
+  margin-left: 4px;
+}
+
 .writer {
   margin-left: auto;
   font-size: 14px;
-  color: #888;
+  color: #718096;
 }
 
-/* --- 자유 게시판 스타일 (신규 추가) --- */
+.nickname-link:hover,
+.clickable-writer:hover {
+  color: #0066ff;
+  text-decoration: underline;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+/* =========================================
+   4. 자유 게시판 (리스트 형태)
+   ========================================= */
 .free-board-list table {
   width: 100%;
-  border-collapse: collapse;
+  border-collapse: separate;
+  border-spacing: 0;
   background: white;
-  border-radius: 8px;
+  border-radius: 12px;
   overflow: hidden;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  border: 1px solid #e1e4e8;
 }
 
 .free-board-list th {
-  background: #f4f6fa;
-  padding: 14px;
+  background: #f8f9fa;
+  padding: 16px;
   font-size: 15px;
-  color: #444;
-  border-bottom: 2px solid #e1e5ee;
+  font-weight: 600;
+  color: #555;
+  border-bottom: 1px solid #e1e4e8;
+  text-align: center;
 }
 
 .free-board-list td {
-  padding: 16px 14px;
-  border-bottom: 1px solid #eee;
+  padding: 16px;
+  border-bottom: 1px solid #f0f0f0;
   text-align: center;
   font-size: 15px;
   color: #333;
+}
+
+.free-board-list tr:last-child td {
+  border-bottom: none;
 }
 
 .free-board-list tr:hover {
@@ -501,82 +620,23 @@ onMounted(() => {
 .title-td {
   text-align: left !important;
   font-weight: 500;
+  color: #2d3748;
 }
 
 .empty-msg {
-  padding: 40px !important;
-  color: #999;
+  padding: 60px !important;
+  color: #a0aec0;
+  font-size: 16px;
 }
 
-/* 🔥 [신규 스타일 추가] 정렬 & 자동완성 */
-
-.sort-group {
-  margin-left: auto; /* 정렬 버튼을 오른쪽으로 밀기 */
-}
-
-.sort-group select {
-  padding: 8px 12px;
-  border: 1px solid #d4d9e3;
-  border-radius: 6px;
-  background-color: white;
-  cursor: pointer;
-}
-
-.suggestions-list {
-  position: absolute;
-  top: 100%;
-  left: 0;
-  width: 100%;
-  min-width: 200px;
-  background: white;
-  border: 1px solid #d4d9e3;
-  border-radius: 6px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  list-style: none;
-  padding: 0;
-  margin-top: 5px;
-  z-index: 999;
-  max-height: 200px;
-  overflow-y: auto;
-}
-
-.suggestions-list li {
-  padding: 10px;
-  border-bottom: 1px solid #f1f1f1;
-  cursor: pointer;
-  background: white;
-}
-
-.suggestions-list li:hover {
-  background: #f0f8ff;
-  color: #0066ff;
-}
-/* 🔥 [추가] 필터 드롭다운 스타일 */
-.filter-dropdowns {
-  display: flex;
-  gap: 8px;
-}
-
-.filter-dropdowns select {
-  padding: 8px 10px;
-  border: 1px solid #d4d9e3;
-  border-radius: 6px;
-  cursor: pointer;
-  background: white;
-  font-size: 14px;
-  min-width: 100px; /* 너무 작아지지 않게 최소 너비 설정 */
-}
-
-.filter-dropdowns select:focus {
-  border-color: #0066ff;
-  outline: none;
-}
-
-.nickname-link:hover,
-.clickable-writer:hover {
-  color: #0066ff; /* 파란색 강조 */
-  text-decoration: underline;
-  cursor: pointer;
-  font-weight: bold;
+/* [신규] 게시글 없을 때 메시지 스타일 */
+.empty-feed-msg {
+  text-align: center;
+  padding: 60px 0;
+  color: #a0aec0;
+  font-size: 16px;
+  background: #f8f9fa;
+  border-radius: 12px;
+  border: 1px dashed #dcdfe6;
 }
 </style>
