@@ -10,18 +10,22 @@
       </div>
 
       <div class="right">
-        <template v-if="!userInfo">
-          <router-link to="/login" class="login-btn">로그인</router-link>
-        </template>
+  <template v-if="!userInfo">
+    <router-link to="/login" class="login-btn">로그인</router-link>
+  </template>
 
-        <template v-else>
-          <span class="welcome-msg">
-            <b>{{ userInfo.nickName }}</b>님 환영합니다!
-          </span>
-          <router-link to="/mypage" class="nav-item">마이페이지</router-link>
-          <button @click="logout" class="logout-btn">로그아웃</button>
-        </template>
-      </div>
+  <template v-else>
+    <router-link v-if="userInfo.role === 1" to="/admin/users" class="admin-link">
+      관리자 콘솔
+    </router-link>
+    
+    <span class="welcome-msg">
+      <b>{{ userInfo.nickName }}</b>님 환영합니다!
+    </span>
+    <router-link to="/mypage" class="nav-item">마이페이지</router-link>
+    <button @click="logout" class="logout-btn">로그아웃</button>
+  </template>
+</div>
     </nav>
   </header>
 </template>
@@ -188,5 +192,20 @@ const logout = async () => {
 .logout-btn:hover {
   background: #f8f9fa;
   color: #495057;
+}
+
+.admin-link {
+  color: #d32f2f; /* 관리자 강조용 빨간색 */
+  font-weight: 800;
+  text-decoration: none;
+  font-size: 13px;
+  border: 1px solid #d32f2f;
+  padding: 4px 8px;
+  border-radius: 4px;
+  margin-right: 8px;
+}
+.admin-link:hover {
+  background-color: #d32f2f;
+  color: white;
 }
 </style>
