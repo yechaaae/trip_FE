@@ -76,7 +76,6 @@
     </section>
   </div>
 
-
   <!-- REVIEWS -->
   <section class="reviews-section">
     <div class="reviews-header" @click="toggleReview">
@@ -92,32 +91,40 @@
       <div class="sort">
         <button
           :class="{ active: reviewSort === 'latest' }"
-          @click="reviewSort='latest'; fetchReviews({reset:true})"
-        >최신순</button>
+          @click="
+            reviewSort = 'latest';
+            fetchReviews({ reset: true });
+          "
+        >
+          최신순
+        </button>
 
         <button
           :class="{ active: reviewSort === 'rating' }"
-          @click="reviewSort='rating'; fetchReviews({reset:true})"
-        >별점순</button>
+          @click="
+            reviewSort = 'rating';
+            fetchReviews({ reset: true });
+          "
+        >
+          별점순
+        </button>
 
         <button
           :class="{ active: reviewSort === 'popular' }"
-          @click="reviewSort='popular'; fetchReviews({reset:true})"
-        >인기순</button>
+          @click="
+            reviewSort = 'popular';
+            fetchReviews({ reset: true });
+          "
+        >
+          인기순
+        </button>
       </div>
 
       <!-- 리뷰 없음 -->
-      <div v-if="reviews.length === 0 && !reviewLoading" class="empty">
-        아직 작성된 리뷰가 없습니다.
-      </div>
+      <div v-if="reviews.length === 0 && !reviewLoading" class="empty">아직 작성된 리뷰가 없습니다.</div>
 
       <!-- 리뷰 카드 -->
-      <div
-        v-for="r in reviews"
-        :key="r.boardId"
-        class="review-card"
-        @click="goReviewDetail(r.boardId)"
-      >
+      <div v-for="r in reviews" :key="r.boardId" class="review-card" @click="goReviewDetail(r.boardId)">
         <div class="top">
           <h3 class="title">{{ r.title }}</h3>
           <span class="rating">⭐ {{ r.rating }}</span>
@@ -131,13 +138,7 @@
       </div>
 
       <!-- 더 보기 -->
-      <button
-        v-if="reviewPage < reviewTotalPages"
-        class="more-btn"
-        @click="loadMoreReviews"
-      >
-        더 보기
-      </button>
+      <button v-if="reviewPage < reviewTotalPages" class="more-btn" @click="loadMoreReviews">더 보기</button>
     </div>
   </section>
 </template>
@@ -145,7 +146,7 @@
 <script setup>
 import { ref, computed, onMounted, nextTick } from "vue";
 import { useRoute, useRouter } from "vue-router";
-
+import axios from "axios";
 import { Swiper, SwiperSlide } from "swiper/vue";
 import { Navigation, Pagination } from "swiper/modules";
 import "swiper/css";
@@ -171,7 +172,6 @@ const place = ref(null);
 const images = ref([]);
 const saved = ref(false);
 const bookmarkId = ref(null);
-
 
 //for review
 const isReviewOpen = ref(false);
@@ -206,7 +206,7 @@ const fetchImages = async () => {
   }
 };
 
-//review 
+//review
 const fetchReviews = async ({ reset = false } = {}) => {
   if (reviewLoading.value) return;
   reviewLoading.value = true;
@@ -232,7 +232,6 @@ const fetchReviews = async ({ reset = false } = {}) => {
     } else {
       reviews.value = [...reviews.value, ...data.list];
     }
-
   } catch (e) {
     console.error("리뷰 불러오기 실패", e);
   } finally {
@@ -262,54 +261,82 @@ const loadMoreReviews = async () => {
   await fetchReviews();
 };
 
-
 const goReviewDetail = (boardId) => {
   router.push(`/board/${boardId}`);
 };
-
 
 /* ======================
    BOOKMARK
 ====================== */
 const checkSavedStatus = async () => {
   try {
-    const { data } = await api.get("/api/mypage/bookmark");
-    const found = data.find((item) => item.contentId == contentId);
+    // 🚨 수정 전: api.get(...) -> api가 정의되지 않아 에러 발생
+    // ✅ 수정 후: axios.get(...) 사용 및 withCredentials 옵션 추가
+    const { data } = await axios.get("http://localhost:8080/api/mypage/bookmark", {
+      withCredentials: true,
+    });
+
+    // contentId 타입 비교를 위해 둘 다 String 또는 Number로 통일하는 것이 안전합니다.
+    const found = data.find((item) => String(item.contentId) === String(contentId));
 
     if (found) {
       saved.value = true;
       bookmarkId.value = found.bookmarkId;
+      console.log("북마크 상태: 저장됨", bookmarkId.value);
     } else {
       saved.value = false;
       bookmarkId.value = null;
+      console.log("북마크 상태: 저장되지 않음");
     }
-  } catch {
-    // 비로그인
+  } catch (e) {
+    console.error("북마크 확인 실패:", e);
+    // 에러 발생 시(비로그인 등) 저장 안 된 상태로 간주
+    saved.value = false;
   }
 };
-
 const toggleSave = async () => {
   if (!saved.value) {
+    // 저장하기
     try {
-      await api.post("/api/mypage/bookmark", {
-        contentId: Number(contentId),
-        title: place.value.title,
-        addr1: place.value.addr1,
-        firstImage: place.value.firstimage,
-        latitude: Number(place.value.mapy),
-        longitude: Number(place.value.mapx),
-      });
+      // 🔥 [수정] api -> axios로 변경, URL 수정, withCredentials 추가
+      await axios.post(
+        "http://localhost:8080/api/mypage/bookmark",
+        {
+          contentId: Number(contentId),
+          title: place.value.title,
+          addr1: place.value.addr1,
+          firstImage: place.value.firstimage,
+          latitude: Number(place.value.mapy),
+          longitude: Number(place.value.mapx),
+        },
+        {
+          withCredentials: true, // 세션 쿠키 전송 필수
+        }
+      );
+
       await checkSavedStatus();
       alert("관광지가 저장되었습니다.");
     } catch (e) {
+      console.error(e);
+      // 진짜 401 에러일 때만 로그인 창으로 보내는 게 좋지만,
+      // 일단 기존 로직 유지하되 에러 로그를 찍어서 확인 가능하게 함
       alert("로그인이 필요합니다.");
       router.push("/login");
     }
   } else {
+    // 저장 취소
     if (!confirm("저장을 취소하시겠습니까?")) return;
-    await api.delete(`/api/mypage/bookmark/${bookmarkId.value}`);
-    saved.value = false;
-    bookmarkId.value = null;
+    try {
+      // 🔥 [수정] api -> axios 변경
+      await axios.delete(`http://localhost:8080/api/mypage/bookmark/${bookmarkId.value}`, {
+        withCredentials: true,
+      });
+      saved.value = false;
+      bookmarkId.value = null;
+    } catch (e) {
+      console.error(e);
+      alert("오류가 발생했습니다.");
+    }
   }
 };
 
@@ -353,12 +380,12 @@ const goWriteReview = () => {
   router.push({
     path: "/board/write",
     query: {
-      type: 2,                  // 2: 리뷰 작성 모드
-      contentId: contentId,     // 관광지 고유 ID
+      type: 2, // 2: 리뷰 작성 모드
+      contentId: contentId, // 관광지 고유 ID
       title: place.value.title, // 관광지 이름 (제목 자동입력용)
       addr1: place.value.addr1, // 주소 (정보 표시용)
-      mapx: place.value.mapx,   // 경도 (지도 표시용)
-      mapy: place.value.mapy    // 위도
+      mapx: place.value.mapx, // 경도 (지도 표시용)
+      mapy: place.value.mapy, // 위도
     },
   });
 };
@@ -385,7 +412,6 @@ const sharePlace = async () => {
     alert("공유에 실패했습니다.");
   }
 };
-
 
 /* ======================
    COMPUTED
@@ -544,7 +570,7 @@ onMounted(async () => {
 
   &:hover {
     transform: translateY(-2px);
-    box-shadow: 0 6px 16px rgba(0,0,0,0.06);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.06);
   }
 
   .top {
@@ -585,5 +611,4 @@ onMounted(async () => {
   font-weight: 700;
   cursor: pointer;
 }
-
 </style>
