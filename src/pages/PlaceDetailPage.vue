@@ -29,7 +29,7 @@
     <section class="action-bar">
       <!-- 저장하기 -->
       <div class="action-item" @click="toggleSave">
-        <img :src="saveIcon" class="action-icon" :class="{ active: saved }" alt="저장하기" />
+        <img :src="saved ? savedIcon : saveIcon" class="action-icon" alt="저장하기" />
         <span>{{ saved ? "저장됨" : "저장하기" }}</span>
       </div>
 
@@ -161,6 +161,7 @@ import { getReviewStats } from "@/api/board";
 import { getPlaceReviews } from "@/api/board";
 
 import saveIcon from "@/assets/icons/icon-save.png";
+import savedIcon from "@/assets/icons/icon-saved.png";
 import reviewIcon from "@/assets/icons/icon-write.png";
 import shareIcon from "@/assets/icons/icon-share.png";
 
