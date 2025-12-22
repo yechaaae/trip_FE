@@ -2,32 +2,42 @@
   <div class="detail-container">
     <h1>{{ post.title }}</h1>
 
-    <img v-if="post.saveFile" :src="`http://localhost:8080/upload/${post.saveFile}`" class="detail-img" />
-    <div v-else class="image-placeholder"></div>
-
+    <!-- 별점 (제목 아래로 이동) -->
     <div class="rating">⭐ {{ post.rating }} / 5.0</div>
+
+    <!-- 이미지 영역이 있을 때만 보이도록 수정 -->
+    <div v-if="post.saveFile" class="image-container">
+      <img :src="`http://localhost:8080/upload/${post.saveFile}`" class="detail-img" />
+    </div>
+
+    <!-- 이미지가 없으면 이 부분은 아예 보이지 않도록 설정 -->
+    <div v-else class="image-placeholder"></div>
 
     <p class="content">
       {{ post.content }}
     </p>
 
-    <div class="actions">
-      <button class="action-btn like-btn" :class="{ liked: post.userLiked }" @click="toggleLike">
-        {{ post.userLiked ? "❤️" : "🤍" }} 좋아요 {{ post.likeCount }}
-      </button>
-      <button>👀 조회수 {{ post.hit }}</button>
-      <button>💬 댓글 {{ post.commentCount || 0 }}</button>
+    <!-- 좋아요, 댓글과 작성자, 날짜, 조회수를 다른 행으로 배치 -->
+    <div class="post-meta-actions">
+      <div class="actions">
+        <button class="action-btn like-btn" :class="{ liked: post.userLiked }" @click="toggleLike">
+          {{ post.userLiked ? "❤️" : "🤍" }} 좋아요 {{ post.likeCount }}
+        </button>
+        <button>💬 댓글 {{ post.commentCount || 0 }}</button>
+      </div>
+
+      <div class="post-meta">
+        <span class="writer" @click="goToProfile(post.userId)" style="cursor: pointer"> by {{ post.nickName }}</span>
+        <span class="date">·{{ post.registDate }}</span>
+        <span class="views">·조회{{ post.hit }} </span>
+      </div>
     </div>
-    <div class="actions">
-  <span class="writer" @click="goToProfile(post.userId)" style="cursor: pointer;">
-    by {{ post.nickName }}
-  </span>
-  <span class="date">· {{ post.registDate }}</span>
-</div>
+
     <div class="owner-actions" v-if="userInfo && userInfo.userId === post.userId">
       <button class="edit-btn" @click="goModify">수정</button>
       <button class="delete-btn" @click="deleteArticle">삭제</button>
     </div>
+
     <CommentList :boardId="postId" :userInfo="userInfo" />
   </div>
 </template>
@@ -174,6 +184,18 @@ const goToProfile = (userId) => {
   white-space: pre-line;
 }
 
+/* 좋아요, 댓글과 작성자, 날짜, 조회수 배치 */
+.post-meta-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0;
+}
+
+.actions {
+  display: flex;
+}
+
 .actions button {
   margin-right: 10px;
   background: none;
@@ -184,10 +206,27 @@ const goToProfile = (userId) => {
   border-radius: 5px;
   transition: all 0.2s ease;
 }
+
 .action-btn:hover {
   background-color: #f0f0f0;
 }
-/* 수정 삭제 버튼 스타일 */
+
+/* 작성자와 날짜, 조회수 */
+.post-meta {
+  display: flex;
+  font-size: 14px;
+  color: #777;
+}
+
+.writer {
+  font-weight: bold;
+  margin-right: 8px;
+}
+
+.date .views {
+  color: #aaa;
+}
+
 .owner-actions {
   margin-top: 30px;
   display: flex;
