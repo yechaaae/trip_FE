@@ -1,21 +1,14 @@
 <template>
   <div class="detail-container">
     <article class="detail-card">
-
       <!-- 제목 -->
       <h1 class="detail-title">{{ post.title }}</h1>
 
       <!-- 평점 -->
-      <div v-if="post.rating" class="rating">
-        ⭐ {{ post.rating }} / 5.0
-      </div>
+      <div v-if="post.rating" class="rating">⭐ {{ post.rating }} / 5.0</div>
 
       <!-- 이미지 -->
-      <img
-        v-if="post.saveFile"
-        :src="`http://localhost:8080/upload/${post.saveFile}`"
-        class="detail-img"
-      />
+      <img v-if="post.saveFile" :src="`http://localhost:8080/upload/${post.saveFile}`" class="detail-img" />
 
       <!-- 본문 -->
       <div class="detail-content">
@@ -24,32 +17,21 @@
 
       <!-- 액션 + 메타 -->
       <div class="detail-footer">
-
         <!-- 좌측: 좋아요 / 댓글 / 조회수 -->
         <div class="actions">
-          <button
-            class="like-btn"
-            :class="{ liked: post.userLiked }"
-            @click="toggleLike"
-          >
+          <button class="like-btn" :class="{ liked: post.userLiked }" @click="toggleLike">
             {{ post.userLiked ? "❤️" : "🤍" }} {{ post.likeCount }}
           </button>
 
-          <button class="comment-btn">
-            💬 {{ post.commentCount || 0 }}
-          </button>
+          <button class="comment-btn">💬 {{ post.commentCount || 0 }}</button>
 
           <span class="views">👀 {{ post.hit }}</span>
         </div>
 
         <!-- 우측: 수정/삭제 + 작성자/날짜 -->
         <div class="meta-area">
-
           <!-- 작성자 전용 버튼 (⬆ 위로 이동) -->
-          <div
-            class="owner-actions"
-            v-if="userInfo && userInfo.userId === post.userId"
-          >
+          <div class="owner-actions" v-if="userInfo && userInfo.userId === post.userId">
             <button class="owner-btn edit" @click="goModify">수정</button>
             <button class="owner-btn delete" @click="deleteArticle">삭제</button>
           </div>
@@ -61,19 +43,16 @@
             </span>
             · {{ post.registDate }}
           </div>
-
         </div>
       </div>
 
       <!-- 댓글 영역 -->
       <div class="comment-section">
-        <CommentList :boardId="postId" :userInfo="userInfo" />
+        <CommentList :boardId="postId" :userInfo="userInfo" @comment-change="fetchPostDetail(false)" />
       </div>
-
     </article>
   </div>
 </template>
-
 
 <script setup>
 import { ref, onMounted } from "vue";
@@ -108,19 +87,17 @@ onMounted(async () => {
 const deleteArticle = async () => {
   const isAdmin = userInfo.value?.role === 1;
   const msg = isAdmin ? "관리자 권한으로 이 게시글을 강제 삭제하시겠습니까?" : "정말 삭제하시겠습니까?";
-  
+
   if (!confirm(msg)) return;
 
   try {
     // 관리자면 /admin/board, 일반유저면 /api/board 호출 (백엔드 설정에 맞춤)
-    const url = isAdmin 
-                ? `http://localhost:8080/admin/board/${postId}` 
-                : `http://localhost:8080/api/board/${postId}`;
+    const url = isAdmin ? `http://localhost:8080/admin/board/${postId}` : `http://localhost:8080/api/board/${postId}`;
 
     await axios.delete(url, {
       withCredentials: true,
     });
-    
+
     alert("삭제되었습니다.");
     router.push("/board");
   } catch (error) {
@@ -154,7 +131,7 @@ const toggleLike = async () => {
     );
 
     // 3. 화면 갱신 (상세 정보를 다시 불러와서 숫자와 하트 상태 업데이트)
-    await fetchPostDetail(true);
+    await fetchPostDetail(false);
   } catch (error) {
     console.error("좋아요 처리 실패", error);
     alert("오류가 발생했습니다.");
@@ -226,7 +203,7 @@ const goToProfile = (userId) => {
 }
 
 .detail-content {
-  margin-top: 28px;     
+  margin-top: 28px;
   margin-left: 10px;
   font-size: 17px;
   line-height: 1.75;
@@ -276,8 +253,8 @@ const goToProfile = (userId) => {
   padding: 8px 18px;
   border-radius: 999px;
   border: none;
-  font-size: 15px;         
-  font-weight: 700;        
+  font-size: 15px;
+  font-weight: 700;
   cursor: pointer;
 }
 
@@ -296,7 +273,7 @@ const goToProfile = (userId) => {
 }
 
 .views {
-  font-size: 15px;          
+  font-size: 15px;
   font-weight: 600;
   color: #6b7280;
 }
