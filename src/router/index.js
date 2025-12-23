@@ -3,6 +3,8 @@ import AttractionDetailPage from "@/pages/PlaceDetailPage.vue";
 import RankingLayout from "@/pages/ranking/RankingLayout.vue";
 import ReviewRanking from "@/pages/ranking/ReviewRankingPage.vue";
 import AdminUserPage from '@/pages/AdminUserPage.vue'
+import MyPageLayout from "@/layouts/MyPageLayout.vue";
+
 import { useMemberStore } from "@/stores/memberStore";
 import { storeToRefs } from "pinia";
 const routes = [
@@ -36,14 +38,37 @@ const routes = [
   { path: "/register", name: "Register", component: () => import("@/pages/RegisterPage.vue") },
 
   // ===== 마이페이지 =====
-  { path: "/mypage/profile-edit", name: "ProfileEdit", component: () => import("@/pages/ProfileEditPage.vue") },
-  { path: "/mypage", name: "MyPage", component: () => import("@/pages/MyPage.vue") },
+  {
+    path: "/mypage",
+    component: MyPageLayout,
+    meta: { noWrapper: true },   // ⭐ 추가
+    children: [
+      {
+        path: "",
+        name: "MyPage",
+        component: () => import("@/pages/MyPage.vue"),
+      },
+      {
+        path: "profile-edit",
+        component: () => import("@/pages/ProfileEditPage.vue"),
+      },
+    ],
+  },
 
   {
     path: "/user/:userId",
-    name: "UserProfile",
-    component: () => import("@/pages/MyPage.vue"),
+    component: MyPageLayout,
+    meta: { noWrapper: true },   // ⭐ 추가
+    children: [
+      {
+        path: "",
+        name: "UserProfile",
+        component: () => import("@/pages/MyPage.vue"),
+      },
+    ],
   },
+
+
 
   {
     path: "/attraction/:id", // :id 부분이 contentId가 됩니다.
