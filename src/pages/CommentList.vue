@@ -25,17 +25,19 @@
             <p v-else class="text">{{ comment.content }}</p>
 
             <div class="actions" v-if="!comment.isDeleted">
-  <button @click="toggleReplyBox(comment.commentId)">답글</button>
-  
-  <span v-if="isOwner(comment.userId) || userInfo?.role === 1">
-    <button v-if="isOwner(comment.userId)" @click="openEdit(comment)">수정</button>
-    
-    <button @click="deleteComment(comment.commentId)" 
-            :style="userInfo?.role === 1 && !isOwner(comment.userId) ? 'color: #f44336; font-weight: bold;' : ''">
-      {{ userInfo?.role === 1 && !isOwner(comment.userId) ? '강제 삭제' : '삭제' }}
-    </button>
-  </span>
-</div>
+              <button @click="toggleReplyBox(comment.commentId)">답글</button>
+
+              <span v-if="isOwner(comment.userId) || userInfo?.role === 1">
+                <button v-if="isOwner(comment.userId)" @click="openEdit(comment)">수정</button>
+
+                <button
+                  @click="deleteComment(comment.commentId)"
+                  :style="userInfo?.role === 1 && !isOwner(comment.userId) ? 'color: #f44336; font-weight: bold;' : ''"
+                >
+                  {{ userInfo?.role === 1 && !isOwner(comment.userId) ? "강제 삭제" : "삭제" }}
+                </button>
+              </span>
+            </div>
           </div>
         </div>
 
@@ -91,7 +93,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, defineProps } from "vue";
+import { ref, onMounted, defineProps, defineEmits } from "vue";
 import { useRouter } from "vue-router";
 import axios from "axios";
 const router = useRouter();
@@ -99,7 +101,7 @@ const props = defineProps({
   boardId: [Number, String],
   userInfo: Object,
 });
-
+const emit = defineEmits(["comment-change"]);
 const comments = ref([]);
 const newComment = ref("");
 const replyContent = ref("");
@@ -168,6 +170,7 @@ const submitComment = async (parentId) => {
       newComment.value = "";
     }
     await fetchComments();
+    emit("comment-change");
   } catch (error) {
     console.error("작성 실패", error);
   }
@@ -177,21 +180,22 @@ const submitComment = async (parentId) => {
 const deleteComment = async (commentId) => {
   const isAdmin = props.userInfo?.role === 1;
   const msg = isAdmin ? "관리자 권한으로 이 댓글을 강제 삭제하시겠습니까?" : "정말 삭제하시겠습니까?";
-  
+
   if (!confirm(msg)) return;
 
   try {
     // 관리자면 /admin/comment, 일반유저면 /comment 호출
-    const url = isAdmin 
-                ? `http://localhost:8080/admin/comment/${commentId}` 
-                : `http://localhost:8080/comment/${commentId}`;
+    const url = isAdmin
+      ? `http://localhost:8080/admin/comment/${commentId}`
+      : `http://localhost:8080/comment/${commentId}`;
 
     await axios.delete(url, {
       data: { userId: props.userInfo.userId }, // 기존 로직 유지
-      withCredentials: true
+      withCredentials: true,
     });
-    
+
     await fetchComments();
+    emit("comment-change");
   } catch (error) {
     console.error("삭제 실패", error);
     alert("삭제 권한이 없거나 오류가 발생했습니다.");
@@ -229,6 +233,7 @@ const updateComment = async (commentId) => {
     // 성공 시 상태 초기화 및 목록 갱신
     cancelEdit();
     await fetchComments();
+    emit("comment-change");
   } catch (error) {
     console.error("수정 실패", error);
     alert("수정 권한이 없거나 오류가 발생했습니다.");
@@ -421,7 +426,7 @@ onMounted(() => {
 }
 
 .regist-btn {
-  align-self: flex-end;   
+  align-self: flex-end;
   padding: 8px 20px;
 
   background: #0066ff;
@@ -433,6 +438,4 @@ onMounted(() => {
   font-weight: 600;
   cursor: pointer;
 }
-
-
 </style>
