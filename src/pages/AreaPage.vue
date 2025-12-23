@@ -159,7 +159,7 @@ const fetchPlaces = async () => {
       contentid: item.contentid || item.contentId,
       title: item.title,
       addr1: item.addr1,
-      firstimage: item.firstimage || item.firstImage || "/tmpimg.png",
+      firstimage: item.firstimage || item.firstImage || "area/moabwa.png",
       latitude: item.latitude || item.mapy,
       longitude: item.longitude || item.mapx,
     }));
