@@ -184,7 +184,7 @@ const getImageUrl = (path) => {
 
   background: #ffffff;
   border-radius: 16px;
-  padding: 24px;
+  padding: 10px 24px;
   box-sizing: border-box;
 
   display: flex;
@@ -206,8 +206,8 @@ const getImageUrl = (path) => {
   font-weight: 700;
   color: #2b2f33;
 
-  padding-bottom: 12px;
-  margin-bottom: 16px;
+  padding-bottom: 10px;
+  margin-bottom: 12px;
 
   border-bottom: 1px solid #f1f3f5;
 }
@@ -239,6 +239,19 @@ const getImageUrl = (path) => {
 
   text-align: center;
   color: #888;
+
+  transform: translateY(-50px);
+}
+
+.empty-badge p {
+  font-size: 15px;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+.empty-badge small {
+  font-size: 13px;
+  color: #aaa;
 }
 
 /* ===================
