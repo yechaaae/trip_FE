@@ -32,14 +32,24 @@ const isActive = (path) => route.path === path;
 .ranking-layout {
   max-width: 900px;
   margin: 0 auto;
-
-  /* 상단은 네비바 + 카드 여백에 맞추고,
-     하단은 과도한 흰 여백 방지 */
   padding: 24px 20px 32px;
 }
 
 .ranking-content {
   width: 100%;
+
+  /* ✅ 핵심: 하위 RouterView가 '남는 높이'를 억지로 차지하는 걸 막음 */
+  height: auto;
+  min-height: 0;
+
+  /* ✅ 혹시 하위 페이지가 margin-bottom 같은 걸로 늘리면 잘라냄(스크롤 방지) */
+  overflow: visible;
+}
+
+/* ✅ RouterView가 렌더링하는 첫 래퍼가 block으로 높이만큼만 먹게 */
+.ranking-content :deep(> *) {
+  height: auto !important;
+  min-height: 0 !important;
 }
 
 /* =========================
