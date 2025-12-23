@@ -18,7 +18,8 @@
           </div>
 
           <!-- MAP -->
-          <MapView :filters="filters" />
+          <!-- 지도 리렌더링 최적화: filters가 변경될 때만 지도 렌더링 -->
+          <MapView v-if="mapReady" :filters="filters" :zoom="zoomLevel" :center="center" @update="handleMapUpdate" />
         </div>
       </section>
 
@@ -48,34 +49,75 @@
 import { reactive, ref, onMounted } from "vue";
 import MapView from "@/components/MapView.vue";
 import { getMyBadges } from "@/api/badge";
+import axios from "axios";
+import { debounce } from "lodash"; // 디바운스 적용
 
 const filters = reactive({
   saved: false,
   reviewed: false,
 });
 
-// [수정] 변수 선언이 빠져 있었습니다.
 const myBadges = ref([]);
 
+// 지도 데이터 및 상태
+const mapReady = ref(false); // 지도 준비 상태
+const zoomLevel = ref(10); // 기본 줌 레벨
+const center = ref([37.5665, 126.978]); // 기본 위치
+
+// 필터 및 지도 상태 변경 시 요청할 데이터
+const fetchMapData = async (newZoom, newCenter) => {
+  try {
+    const { data } = await axios.get("/api/get-map-data", {
+      params: {
+        zoom: newZoom,
+        center: newCenter,
+      },
+    });
+    mapData.value = data;
+  } catch (error) {
+    console.error("지도 데이터 로딩 오류:", error);
+  }
+};
+
+// 필터 상태 변경
+const toggleFilter = (type) => {
+  filters[type] = !filters[type];
+  // 필터 상태 변경 시 새로운 데이터 요청 (디바운스 사용)
+  fetchMapDataDebounced();
+};
+
+// 디바운스를 적용한 지도 데이터 요청
+const fetchMapDataDebounced = debounce(() => {
+  fetchMapData(zoomLevel.value, center.value);
+}, 500); // 500ms 대기 후 실행
+
+// 마운트 시 뱃지 및 지도 데이터 로드
 onMounted(async () => {
   try {
     const { data } = await getMyBadges();
     myBadges.value = data;
+    mapReady.value = true; // 뱃지 데이터 로딩 후 지도 준비 완료
   } catch (error) {
     console.log("뱃지 로딩 실패(비로그인 등):", error);
     myBadges.value = [];
+    mapReady.value = true; // 비어도 지도 렌더링 진행
   }
 });
+
+// 지도 업데이트 시 (줌, 위치 변경)
+const handleMapUpdate = (newZoom, newCenter) => {
+  zoomLevel.value = newZoom;
+  center.value = newCenter;
+
+  // 지도 상태 변경 시 데이터 요청
+  fetchMapData(newZoom, newCenter);
+};
 
 // 이미지 경로 처리
 const getImageUrl = (path) => {
   if (!path) return "/tmpimg.png";
   if (path.startsWith("http")) return path;
   return `http://localhost:8080${path}`;
-};
-
-const toggleFilter = (type) => {
-  filters[type] = !filters[type];
 };
 </script>
 
@@ -128,7 +170,7 @@ const toggleFilter = (type) => {
   display: flex;
   flex-direction: column;
 
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
 
   h2 {
     font-size: 22px;
@@ -140,6 +182,7 @@ const toggleFilter = (type) => {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 18px;
+    max-height: 500px;
   }
 
   .badge-item {
@@ -242,8 +285,9 @@ const toggleFilter = (type) => {
 
 /* 활성 상태 */
 .filter-btn.active {
-  background: #e7edff;
-  color: #3b5bdb;
+  background: #dbe5ff;
+  color: #4a90e2;
+  transform: translateY(-1px);
 }
 
 .filter-btn.active i {
