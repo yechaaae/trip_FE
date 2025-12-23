@@ -4,8 +4,8 @@
     <section class="header-section">
       <h1>{{ place.title }}</h1>
       <div class="meta">
-        <span>⭐ {{ reviewStats.avgRating.toFixed(1) }}</span>
-        <span>리뷰 {{ reviewStats.reviewCount }}</span>
+        <span class="badge rating">⭐ {{ reviewStats.avgRating.toFixed(1) }}</span>
+        <span class="badge review">리뷰 {{ reviewStats.reviewCount }}</span>
       </div>
     </section>
 
@@ -27,22 +27,29 @@
 
     <!-- ACTION BAR -->
     <section class="action-bar">
-      <!-- 저장하기 -->
-      <div class="action-item" @click="toggleSave">
-        <img :src="saved ? savedIcon : saveIcon" class="action-icon" alt="저장하기" />
-        <span>{{ saved ? "저장됨" : "저장하기" }}</span>
+      <div class="action-col">
+        <div class="action-btn" @click="toggleSave">
+          <img :src="saved ? savedIcon : saveIcon" />
+          <span>저장</span>
+        </div>
       </div>
 
-      <!-- 리뷰쓰기 -->
-      <div class="action-item" @click="goWriteReview">
-        <img :src="reviewIcon" class="action-icon" alt="리뷰쓰기" />
-        <span>리뷰쓰기</span>
+      <div class="divider"></div>
+
+      <div class="action-col">
+        <div class="action-btn" @click="goWriteReview">
+          <img :src="reviewIcon" />
+          <span>리뷰</span>
+        </div>
       </div>
 
-      <!-- 공유하기 -->
-      <div class="action-item" @click="sharePlace">
-        <img :src="shareIcon" class="action-icon" alt="공유하기" />
-        <span>공유하기</span>
+      <div class="divider"></div>
+
+      <div class="action-col">
+        <div class="action-btn" @click="sharePlace">
+          <img :src="shareIcon" />
+          <span>공유</span>
+        </div>
       </div>
     </section>
 
@@ -51,17 +58,17 @@
       <h2>기본 정보</h2>
 
       <div class="info-item">
-        <span class="label"> <i class="fa-solid fa-location-dot"></i> 주소 </span>
+        <span class="label">주소</span>
         <p class="value">{{ place.addr1 }}</p>
       </div>
 
       <div class="info-item" v-if="place.tel">
-        <span class="label"> <i class="fa-solid fa-phone"></i> 전화 </span>
+        <span class="label">전화</span>
         <p class="value">{{ place.tel }}</p>
       </div>
 
       <div class="info-item" v-if="place.homepage">
-        <span class="label"> <i class="fa-solid fa-globe"></i> 홈페이지 </span>
+        <span class="label">홈페이지</span>
         <p class="value" v-html="place.homepage"></p>
       </div>
     </section>
@@ -77,73 +84,68 @@
       <h2>상세 소개</h2>
       <p v-html="cleanOverview"></p>
     </section>
+
+    <!-- REVIEWS -->
+    <section class="reviews-section">
+      <div class="reviews-header" @click="toggleReview">
+        <div class="left">
+          <h2>리뷰</h2>
+          <span class="count">{{ reviewStats.reviewCount }}</span>
+        </div>
+
+        <span class="toggle-arrow" :class="{ open: isReviewOpen }"></span>
+      </div>
+
+      <div v-show="isReviewOpen" class="reviews-body">
+        <div class="sort">
+          <button
+            :class="{ active: reviewSort === 'latest' }"
+            @click="
+              reviewSort = 'latest';
+              fetchReviews({ reset: true });
+            "
+          >
+            최신순
+          </button>
+          <button
+            :class="{ active: reviewSort === 'rating' }"
+            @click="
+              reviewSort = 'rating';
+              fetchReviews({ reset: true });
+            "
+          >
+            별점순
+          </button>
+          <button
+            :class="{ active: reviewSort === 'popular' }"
+            @click="
+              reviewSort = 'popular';
+              fetchReviews({ reset: true });
+            "
+          >
+            인기순
+          </button>
+        </div>
+
+        <div v-if="reviews.length === 0 && !reviewLoading" class="empty">아직 작성된 리뷰가 없습니다.</div>
+
+        <div v-for="r in reviews" :key="r.boardId" class="review-card" @click="goReviewDetail(r.boardId)">
+          <div class="top">
+            <h3 class="title">{{ r.title }}</h3>
+            <span class="rating">⭐ {{ r.rating }}</span>
+          </div>
+
+          <div class="meta">
+            <span>{{ r.nickName }}</span>
+            <span class="dot">·</span>
+            <span>{{ r.registDate }}</span>
+          </div>
+        </div>
+
+        <button v-if="reviewPage < reviewTotalPages" class="more-btn" @click="loadMoreReviews">더 보기</button>
+      </div>
+    </section>
   </div>
-
-  <!-- REVIEWS -->
-  <section class="reviews-section">
-    <div class="reviews-header" @click="toggleReview">
-      <div class="left">
-        <h2>리뷰</h2>
-        <span class="count">{{ reviewStats.reviewCount }}</span>
-      </div>
-      <i :class="isReviewOpen ? 'fa-solid fa-chevron-up' : 'fa-solid fa-chevron-down'"></i>
-    </div>
-
-    <div v-if="isReviewOpen" class="reviews-body">
-      <!-- 정렬 -->
-      <div class="sort">
-        <button
-          :class="{ active: reviewSort === 'latest' }"
-          @click="
-            reviewSort = 'latest';
-            fetchReviews({ reset: true });
-          "
-        >
-          최신순
-        </button>
-
-        <button
-          :class="{ active: reviewSort === 'rating' }"
-          @click="
-            reviewSort = 'rating';
-            fetchReviews({ reset: true });
-          "
-        >
-          별점순
-        </button>
-
-        <button
-          :class="{ active: reviewSort === 'popular' }"
-          @click="
-            reviewSort = 'popular';
-            fetchReviews({ reset: true });
-          "
-        >
-          인기순
-        </button>
-      </div>
-
-      <!-- 리뷰 없음 -->
-      <div v-if="reviews.length === 0 && !reviewLoading" class="empty">아직 작성된 리뷰가 없습니다.</div>
-
-      <!-- 리뷰 카드 -->
-      <div v-for="r in reviews" :key="r.boardId" class="review-card" @click="goReviewDetail(r.boardId)">
-        <div class="top">
-          <h3 class="title">{{ r.title }}</h3>
-          <span class="rating">⭐ {{ r.rating }}</span>
-        </div>
-
-        <div class="meta">
-          <span>{{ r.nickName }}</span>
-          <span class="dot">·</span>
-          <span>{{ r.registDate }}</span>
-        </div>
-      </div>
-
-      <!-- 더 보기 -->
-      <button v-if="reviewPage < reviewTotalPages" class="more-btn" @click="loadMoreReviews">더 보기</button>
-    </div>
-  </section>
 </template>
 
 <script setup>
@@ -444,129 +446,204 @@ onMounted(async () => {
 .detail-page {
   max-width: 1100px;
   margin: 0 auto;
-  padding: 30px 20px;
+  padding: 30px 20px 100px;
 }
 
+/* HEADER */
 .header-section {
-  margin-bottom: 24px;
+  margin-bottom: 28px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #eee;
 
   h1 {
-    font-size: 32px;
+    font-size: 34px;
     font-weight: 800;
   }
 
   .meta {
-    margin-top: 10px;
+    margin-top: 12px;
     display: flex;
-    gap: 14px;
-    font-size: 15px;
-    color: #555;
+    gap: 10px;
+  }
+
+  .badge {
+    padding: 6px 12px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 600;
+  }
+
+  .rating {
+    background: #fff6d8;
+    color: #9a6b00;
+  }
+
+  .review {
+    background: #eef4ff;
+    color: #2b7cff;
   }
 }
 
+/* IMAGE */
 .image-section {
   position: relative;
+  margin-bottom: 32px;
 
   img {
     width: 100%;
     aspect-ratio: 16 / 9;
     object-fit: cover;
-    border-radius: 14px;
+    border-radius: 16px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
   }
 
   .img-count {
     position: absolute;
-    bottom: 14px;
     right: 16px;
-    background: rgba(0, 0, 0, 0.5);
-    color: white;
+    bottom: 14px;
     padding: 6px 14px;
+    background: rgba(0, 0, 0, 0.55);
+    color: #fff;
     border-radius: 999px;
     font-size: 13px;
   }
 }
 
-//저장, 공유 , 리뷰
+/* ACTION BAR */
 .action-bar {
-  display: flex;
-  justify-content: space-around;
-  padding: 24px 0;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr auto 1fr;
+  align-items: center;
 
-  background: #ffffff;
-  border-bottom: 1px solid #eee;
+  background: #f5f8ff;
+  border-radius: 16px;
+  padding: 20px 0;
+  margin-bottom: 40px;
 }
 
-.action-item {
+.action-col {
+  display: flex;
+  justify-content: center;
+}
+
+.divider {
+  width: 1px;
+  height: 42px;
+  background: #dbe4ff;
+}
+
+.action-btn {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 8px;
   cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  color: #445;
 
+  img {
+    width: 40px;
+    height: 40px;
+    transition: transform 0.2s ease;
+  }
+
+  img:hover {
+    transform: scale(1.12);
+  }
+}
+
+/* CARD SECTIONS */
+.info-section,
+.map-section,
+.overview-section,
+.reviews-section {
+  background: #fff;
+  border-radius: 16px;
+  padding: 24px 28px;
+  margin-bottom: 28px;
+  border: 1px solid #eef0f5;
+}
+
+/* INFO */
+.info-item {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.label {
+  width: 64px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #8a8f9c;
+}
+
+.value {
   font-size: 14px;
   color: #333;
 }
 
-.action-icon {
-  width: 42px;
-  height: 42px;
-  transition: transform 0.2s ease, opacity 0.2s ease;
+.value a {
+  color: #2b7cff;
+  font-weight: 600;
+  text-decoration: none;
 }
 
-.action-item:hover .action-icon {
-  transform: scale(1.12);
+.value a:hover {
+  text-decoration: underline;
 }
 
-.action-icon.active {
-  filter: drop-shadow(0 0 6px rgba(255, 80, 80, 0.6));
-}
-
+/* MAP */
 .map {
   height: 360px;
   border-radius: 14px;
 }
 
-/* ======================
-   REVIEWS
-====================== */
-
-.reviews-section {
-  max-width: 1100px;
-  margin: 40px auto 0;
-  border: 1px solid #eee;
-  border-radius: 16px;
-  background: #fff;
-  overflow: hidden;
+/* OVERVIEW */
+.overview-section p {
+  line-height: 1.8;
+  font-size: 15px;
+  color: #444;
 }
 
+/* REVIEWS */
 .reviews-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 18px 20px;
   cursor: pointer;
-  border-bottom: 1px solid #eee;
-
-  h2 {
-    font-size: 20px;
-    font-weight: 800;
-    margin: 0;
-  }
-
-  .count {
-    margin-left: 8px;
-    font-size: 14px;
-    color: #666;
-  }
+  padding-bottom: 12px;
+  margin-bottom: 16px;
+  border-bottom: 1px solid #eef0f5;
 
   .left {
     display: flex;
     align-items: center;
+    gap: 8px;
+  }
+
+  .count {
+    font-size: 14px;
+    color: #666;
   }
 }
 
+.toggle-arrow {
+  width: 18px;
+  height: 18px;
+  border-right: 2px solid #2b7cff;
+  border-bottom: 2px solid #2b7cff;
+  transform: rotate(45deg);
+  transition: transform 0.25s ease;
+}
+
+.toggle-arrow.open {
+  transform: rotate(-135deg);
+}
+
 .reviews-body {
-  padding: 20px;
+  padding-top: 12px;
 }
 
 .sort {
@@ -579,8 +656,8 @@ onMounted(async () => {
     border-radius: 999px;
     border: 1px solid #ddd;
     background: #fff;
-    cursor: pointer;
     font-size: 13px;
+    cursor: pointer;
 
     &.active {
       border-color: #2b7cff;
@@ -591,17 +668,18 @@ onMounted(async () => {
 }
 
 .empty {
-  padding: 20px 0;
-  color: #777;
-  text-align: center;
+  min-height: 140px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #888;
 }
 
 .review-card {
   border: 1px solid #eee;
   border-radius: 14px;
-  padding: 16px;
-  margin-bottom: 12px;
-  cursor: pointer;
+  padding: 18px;
+  margin-bottom: 14px;
   transition: transform 0.15s ease, box-shadow 0.15s ease;
 
   &:hover {
@@ -612,34 +690,17 @@ onMounted(async () => {
   .top {
     display: flex;
     justify-content: space-between;
-    align-items: center;
-
-    .title {
-      font-size: 16px;
-      font-weight: 800;
-      margin: 0;
-    }
-
-    .rating {
-      font-size: 14px;
-      color: #444;
-    }
   }
 
   .meta {
     margin-top: 8px;
     font-size: 13px;
     color: #777;
-
-    .dot {
-      margin: 0 6px;
-    }
   }
 }
 
 .more-btn {
   width: 100%;
-  margin-top: 16px;
   padding: 12px;
   border-radius: 12px;
   border: 1px solid #eee;
