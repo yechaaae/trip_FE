@@ -15,41 +15,41 @@ import NavBar from "@/components/NavBar.vue";
 </script>
 
 <style scoped>
-/* ✅ 전체 페이지 배경 */
+/* 전체 배경 */
 .layout {
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
+  height: 100vh;
   background: #f4f6fa;
+  overflow: hidden; /* ⭐ 페이지 전체 스크롤 제거 */
 }
 
-/* ✅ 네비바 아래 영역 */
+/* 네비바 아래 영역 */
 .main {
-  flex: 1;
-  padding-top: 52px; /* fixed navbar 높이 */
-  display: flex;
-  justify-content: center;
+  padding-top: 64px; /* 네비바 높이 */
+  height: 100%;
 }
 
-/* ✅ 실제 콘텐츠 카드 */
+/* ⭐ 핵심: 카드 영역을 화면 안에 고정 */
 .content-wrapper {
-  width: 100%;
   max-width: 1200px;
-
-  margin: 24px 20px;
-  padding: 24px 24px 48px; /* ⭐ 하단 여백은 여기서만 */
+  margin: 24px auto;
+  padding: 24px 20px;
 
   background: #ffffff;
   border-radius: 24px;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04);
+
+  /* ⭐ 여기 중요 */
+  height: calc(100vh - 112px);
+  overflow-y: auto; /* 내부 스크롤 */
 }
 
 /* 모바일 대응 */
 @media (max-width: 768px) {
   .content-wrapper {
     margin: 12px;
-    padding: 18px 16px 36px;
+    padding: 16px 14px;
     border-radius: 16px;
+    height: calc(100vh - 96px);
   }
 }
 </style>
