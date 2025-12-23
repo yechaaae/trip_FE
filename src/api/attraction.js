@@ -14,16 +14,12 @@ const get = (url, params = {}) => {
 // ================================================================
 // 1) 지역별 관광지 목록 조회
 // ================================================================
-export const getAttractionList = (
-  areaCode,
-  contentTypeId,
-  pageNo = 1,
-  numOfRows = 20
-) => {
+export const getAttractionList = (areaCode, contentTypeId, pageNo = 1, numOfRows = 20, keyword = "") => {
   const params = {
     contentTypeId,
     pageNo,
     numOfRows,
+    keyword,
   };
 
   // ⭐ 전체가 아닐 때만 areaCode 추가
@@ -33,7 +29,6 @@ export const getAttractionList = (
 
   return api.get("/attraction/list", { params });
 };
-
 
 // ================================================================
 // 2) 관광지 상세 조회
@@ -57,12 +52,10 @@ export const getAttractionImage = (contentId) => {
 export const getAreaCode = (areaCode) => get("/attraction/area", { areaCode });
 
 // 소개 정보 조회
-export const getIntroInfo = (contentId, contentTypeId) =>
-  get("/attraction/intro", { contentId, contentTypeId });
+export const getIntroInfo = (contentId, contentTypeId) => get("/attraction/intro", { contentId, contentTypeId });
 
 // 반복 정보 조회
-export const getRepeatInfo = (contentId, contentTypeId) =>
-  get("/attraction/info", { contentId, contentTypeId });
+export const getRepeatInfo = (contentId, contentTypeId) => get("/attraction/info", { contentId, contentTypeId });
 
 // 키워드 검색
 export const searchAttractions = (keyword, areaCode, contentTypeId) =>
