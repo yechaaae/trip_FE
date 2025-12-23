@@ -131,23 +131,40 @@ const goDetail = (id) => router.push(`/place/${id}`);
 // ⭐ API 호출
 const fetchPlaces = async () => {
   try {
-    const areaCode = selectedArea.value.code;
-
     const { data } = await getAttractionList(
       selectedArea.value.code,
       selectedCategory.value.typeId,
       pageNo.value,
       numOfRows,
-      searchQuery.value // 검색 위해 추가
+      searchQuery.value
     );
 
-    const body = data?.response?.body;
-    const items = body?.items?.item;
+    let rawItems = [];
 
-    places.value = Array.isArray(items) ? items : [];
-    totalCount.value = body?.totalCount || 0;
+    // 1. DB 검색 결과인 경우 (data.items 존재)
+    if (data.items) {
+      rawItems = data.items;
+      totalCount.value = data.totalCount || 0;
+    }
+    // 2. 외부 API 결과인 경우
+    else {
+      const body = data?.response?.body;
+      const items = body?.items?.item;
+      rawItems = Array.isArray(items) ? items : items ? [items] : [];
+      totalCount.value = body?.totalCount || 0;
+    }
+
+    // ⭐ 중요: DB 데이터(camelCase)와 API 데이터(lowercase) 필드명 통일
+    places.value = rawItems.map((item) => ({
+      contentid: item.contentid || item.contentId,
+      title: item.title,
+      addr1: item.addr1,
+      firstimage: item.firstimage || item.firstImage || "/tmpimg.png",
+      latitude: item.latitude || item.mapy,
+      longitude: item.longitude || item.mapx,
+    }));
   } catch (error) {
-    console.error("❌ 관광지 API 호출 실패:", error);
+    console.error("❌ 관광지 데이터 로드 실패:", error);
     places.value = [];
   }
 };
