@@ -412,28 +412,37 @@ const openModal = (type) => {
 </script>
 
 <style scoped lang="scss">
+
 .mypage-container {
   display: flex;
-  height: calc(100vh - 60px);
 
   max-width: 1200px;
-  margin: 16px auto 24px;
+  margin: 24px auto;
+  height: calc(100vh - 112px);
 
   background: #ffffff;
-  border-radius: 14px;
-  border: 1px solid #eaeef5;
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.04);
+  border-radius: 24px;
+
+  /* ⭐ 통일된 무대 쉐도우 */
+  box-shadow:
+    0 18px 40px rgba(0, 0, 0, 0.06);
 
   overflow: hidden;
 }
 
 
+
+
 .profile-section {
   width: 320px;
+  height: 100%;
   flex-shrink: 0;
+
+  background: #f4f6fd;
   border-right: 1px solid #e6ebf2;
+
   padding: 40px 24px;
-  background: #f4f6fd; 
+
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -506,17 +515,21 @@ const openModal = (type) => {
 /* 오른쪽 콘텐츠 */
 .content-section {
   flex: 1;
-  max-width: 680px;
-  margin: 0 auto;        /* ⬅ 가운데로 모음 */
   padding: 32px 24px;
+
+  display: flex;
+  flex-direction: column;
+
+  height: 100%;          /* ⭐ 부모(mypage-container) 기준 */
+  overflow: hidden;      /* ⭐ 여기서 전체 스크롤 차단 */
 }
 
-
-
+/* 탭 영역 (고정) */
 .tabs {
   display: flex;
   gap: 14px;
   margin-bottom: 24px;
+  flex-shrink: 0;        /* ⭐ 줄어들지 않게 */
 }
 
 .tab {
@@ -534,9 +547,10 @@ const openModal = (type) => {
 }
 
 .tab-content {
-  border-top: 1px solid #ddd;
+  flex: 1;             
+  overflow-y: auto;     
   padding-top: 24px;
-  font-size: 16px;
+  border-top: 1px solid #ddd;
 }
 
 .edit-btn {
