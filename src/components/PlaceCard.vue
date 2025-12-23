@@ -3,9 +3,10 @@
     <img :src="place.image" />
     <div class="info">
       <h3>{{ place.title }}</h3>
-      <p>{{ place.addr }}</p>
+      <p class="desc">"{{ place.description }}"</p> <p>{{ place.addr }}</p>
+      
       <router-link
-        :to="`/place/${place.id}`"
+        :to="`/place/${place.id}`" 
         class="detail-btn"
       >
         상세 보기 →
