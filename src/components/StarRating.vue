@@ -7,7 +7,7 @@
         class="star"
         :class="{
           full: displayValue >= i,
-          half: displayValue === i - 0.5
+          half: displayValue === i - 0.5,
         }"
         @mousemove="setHover(i, $event)"
         @mouseleave="clearHover"
@@ -26,20 +26,18 @@ import { computed } from "vue";
 import { ref, watch } from "vue";
 
 const props = defineProps({
-  modelValue: Number
+  modelValue: Number,
 });
 const emit = defineEmits(["update:modelValue"]);
 
-const score = ref(props.modelValue ?? 0)
+const score = ref(props.modelValue ?? 0);
 
-watch(score, (v) => emit("update:modelValue", v))
+watch(score, (v) => emit("update:modelValue", v));
 
 const hoverValue = ref(null);
 
 // 마우스 올렸을 때 임시 표시될 값 or 실제 값
-const displayValue = computed(() =>
-  hoverValue.value !== null ? hoverValue.value : props.modelValue
-);
+const displayValue = computed(() => (hoverValue.value !== null ? hoverValue.value : props.modelValue));
 
 // ⭐ 커서 위치 기반 정확한 반별/전별 판정
 const getHalfOrFull = (i, e) => {
