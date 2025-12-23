@@ -25,7 +25,7 @@
 
       <!-- BADGE CARD -->
       <aside class="badge-card">
-        <h2>🏅 나의 뱃지함</h2>
+        <h2>나의 뱃지함</h2>
 
         <div class="badge-list" v-if="myBadges.length > 0">
           <div class="badge-item" v-for="badge in myBadges" :key="badge.badgeId">
@@ -120,42 +120,57 @@ const getImageUrl = (path) => {
   return `http://localhost:8080${path}`;
 };
 </script>
-
 <style scoped lang="scss">
 /* ===================
-   PAGE LAYOUT
+   PAGE LAYOUT (FINAL)
 =================== */
 .home-page {
   width: 100%;
-  height: calc(100vh - 60px); // 네비바 높이 제외
+  height: 100%; /* ✅ main 기준 */
+  overflow: hidden; /* ✅ 페이지 스크롤 차단 */
   display: flex;
   justify-content: center;
+  box-sizing: border-box;
 }
 
 .home-container {
   width: 100%;
   max-width: 1100px;
+
+  height: 100%;
+  min-height: 0; /* ⭐ flex overflow 핵심 */
+  overflow: hidden;
+
   padding: 20px;
+  box-sizing: border-box;
 
   display: flex;
   gap: 20px;
-  height: 100%;
 }
 
 /* ===================
-   MAP
+   MAP SECTION
 =================== */
 .map-section {
   flex: 7;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+
   display: flex;
 }
 
 .map-wrapper {
-  width: 100%;
-  height: 100%;
-  border-radius: 16px;
+  flex: 1;
+  min-height: 0;
   overflow: hidden;
-  position: relative; /* filter bar 기준 */
+
+  position: relative;
+  background: #ffffff;
+  border-radius: 16px;
+
+  /* 🔥 맵 영역 구분감 */
+  box-shadow: inset 0 0 0 1px #eef1f5;
 }
 
 /* ===================
@@ -163,77 +178,67 @@ const getImageUrl = (path) => {
 =================== */
 .badge-card {
   flex: 3;
-  background: #fff;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+
+  background: #ffffff;
   border-radius: 16px;
   padding: 24px;
+  box-sizing: border-box;
 
   display: flex;
   flex-direction: column;
 
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  /* 🔥 카드 강조 */
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06), 0 0 0 1px #f1f3f5;
+}
 
-  h2 {
-    font-size: 22px;
-    font-weight: 700;
-    margin-bottom: 20px;
-  }
+/* ===================
+   BADGE TITLE
+=================== */
+.badge-card h2 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 
-  .badge-list {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 18px;
-    max-height: 500px;
-  }
+  font-size: 18px;
+  font-weight: 700;
+  color: #2b2f33;
 
-  .badge-item {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    cursor: pointer;
+  padding-bottom: 12px;
+  margin-bottom: 16px;
 
-    .badge-circle {
-      /* 기존 속성 유지 */
-      width: 70px;
-      height: 70px;
-      border-radius: 50%;
-      background: #dbe6ff;
-      overflow: hidden; /* 이미지가 튀어나가지 않게 */
-      border: 2px solid #fff;
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  border-bottom: 1px solid #f1f3f5;
+}
 
-      img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-      }
-    }
+/* ===================
+   BADGE LIST
+=================== */
+.badge-list {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto; /* ✅ 내부만 스크롤 */
 
-    p {
-      text-align: center;
-      font-weight: 600;
-      color: #444;
-      font-size: 13px;
-      /* 긴 이름 말줄임 처리 */
-      width: 100%;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-  }
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px;
+}
 
-  .empty-badge {
-    text-align: center;
-    color: #888;
-    margin-top: 40px;
+/* ===================
+   EMPTY BADGE
+=================== */
+.empty-badge {
+  flex: 1;
+  min-height: 0;
 
-    p {
-      font-weight: bold;
-      margin-bottom: 6px;
-    }
-    small {
-      font-size: 13px;
-    }
-  }
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+
+  text-align: center;
+  color: #888;
 }
 
 /* ===================
@@ -241,8 +246,8 @@ const getImageUrl = (path) => {
 =================== */
 .filter-bar {
   position: absolute;
-  top: 20px;
-  left: 20px;
+  top: 16px;
+  left: 16px;
   z-index: 30;
 
   display: flex;
@@ -274,23 +279,12 @@ const getImageUrl = (path) => {
   transition: background 0.2s ease, color 0.2s ease;
 }
 
-.filter-btn i {
-  font-size: 14px;
-}
-
-/* hover (비활성) */
 .filter-btn:hover {
   background: #f1f3f5;
 }
 
-/* 활성 상태 */
 .filter-btn.active {
   background: #dbe5ff;
   color: #4a90e2;
-  transform: translateY(-1px);
-}
-
-.filter-btn.active i {
-  color: #3b5bdb;
 }
 </style>
