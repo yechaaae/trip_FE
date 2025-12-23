@@ -1,6 +1,5 @@
 <template>
   <div class="area-page">
-
     <!-- 🔹 지역 선택 캐러셀 -->
     <div class="area-scroll">
       <button class="nav-btn" @click="scrollLeft">‹</button>
@@ -21,11 +20,9 @@
       <button class="nav-btn" @click="scrollRight">›</button>
     </div>
 
-    <!-- 🔹 지역명 + 카테고리 선택 -->
     <section class="place-list">
-
       <div class="title-row">
-        <!-- ⬅ 왼쪽: 지역 + 카테고리 -->
+        <!-- 🔹 지역명 + 카테고리 선택 -->
         <div class="title-left">
           <h2>{{ selectedArea.name }}</h2>
 
@@ -34,7 +31,8 @@
             <span class="arrow" :class="{ open: dropdownOpen }">⌄</span>
           </div>
 
-          <ul v-if="dropdownOpen" class="dropdown">
+          <!-- 드롭다운 메뉴 -->
+          <ul v-show="dropdownOpen" class="dropdown">
             <li v-for="c in categories" :key="c.type" @click="selectCategory(c)">
               {{ c.label }}
             </li>
@@ -73,17 +71,9 @@
 
       <!-- 🔹 카드 목록 -->
       <div class="cards">
-        <div
-          class="card"
-          v-for="item in places"
-          :key="item.contentid"
-          @click="goDetail(item.contentid)"
-        >
+        <div class="card" v-for="item in places" :key="item.contentid" @click="goDetail(item.contentid)">
           <!-- ⭐ 이미지 없을 때 fallback 적용 -->
-          <div
-            class="thumbnail"
-            :style="{ backgroundImage: `url(${item.firstimage || '/tmpimg.png'})` }"
-          ></div>
+          <div class="thumbnail" :style="{ backgroundImage: `url(${item.firstimage || '/tmpimg.png'})` }"></div>
 
           <div class="info">
             <h3>{{ item.title }}</h3>
@@ -94,29 +84,16 @@
 
       <!-- 🔹 페이지네이션 -->
       <div class="pagination" v-if="totalCount > numOfRows">
-        <button
-          :disabled="pageNo === 1"
-          @click="pageNo--, fetchPlaces()"
-        >
-          이전
-        </button>
+        <button :disabled="pageNo === 1" @click="pageNo--, fetchPlaces()">이전</button>
 
         <span>
           {{ pageNo }} /
           {{ Math.ceil(totalCount / numOfRows) }}
         </span>
 
-        <button
-          :disabled="pageNo >= Math.ceil(totalCount / numOfRows)"
-          @click="pageNo++, fetchPlaces()"
-        >
-          다음
-        </button>
+        <button :disabled="pageNo >= Math.ceil(totalCount / numOfRows)" @click="pageNo++, fetchPlaces()">다음</button>
       </div>
-
-
     </section>
-
   </div>
 </template>
 
@@ -125,7 +102,7 @@ import { ref, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import { areas } from "@/data/areas";
 import { getAttractionList } from "@/api/attraction";
-import { nextTick } from "vue"; 
+import { nextTick } from "vue";
 
 const router = useRouter();
 
@@ -138,7 +115,6 @@ const numOfRows = 20;
 const searchOpen = ref(false);
 const searchQuery = ref("");
 const searchInput = ref(null);
-
 
 // ⭐ 카테고리 목록
 const categories = [
@@ -162,22 +138,19 @@ const fetchPlaces = async () => {
       selectedCategory.value.typeId,
       pageNo.value,
       numOfRows,
-      searchQuery.value // 검색 위해 추가 
+      searchQuery.value // 검색 위해 추가
     );
-
 
     const body = data?.response?.body;
     const items = body?.items?.item;
 
     places.value = Array.isArray(items) ? items : [];
     totalCount.value = body?.totalCount || 0;
-
   } catch (error) {
     console.error("❌ 관광지 API 호출 실패:", error);
     places.value = [];
   }
 };
-
 
 // ⭐ 지역 선택 시
 const selectArea = (area) => {
@@ -202,14 +175,16 @@ const closeSearch = () => {
 
 // 🔍 검색 실행
 const onSearch = () => {
-  pageNo.value = 1;  // 검색 시 첫 페이지로
+  pageNo.value = 1; // 검색 시 첫 페이지로
   fetchPlaces();
 };
 
-
 // ⭐ 카테고리 드롭다운
 const dropdownOpen = ref(false);
-const toggleDropdown = () => (dropdownOpen.value = !dropdownOpen.value);
+// 드롭다운 열기/닫기 함수
+const toggleDropdown = () => {
+  dropdownOpen.value = !dropdownOpen.value; // 상태 토글
+};
 
 const selectCategory = (c) => {
   selectedCategory.value = c;
@@ -240,26 +215,47 @@ onMounted(() => {
   padding: 26px 18px;
 }
 
-/* 🔹 캐러셀 */
+/* 🔹 지역 선택 캐러셀 */
 .area-scroll {
   display: flex;
   align-items: center;
-  gap: 10px;
-  margin-bottom: 34px;
+  gap: 20px;
+  margin-bottom: 30px;
+  position: relative;
+  padding: 10px 0;
+  background: #eaf2ff; /* 부드러운 배경색으로 수정 */
+  border-radius: 12px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
 }
 
+/* 🔹 네비게이션 버튼 (화살표) */
 .nav-btn {
   border: none;
   background: none;
-  font-size: 32px;
+  font-size: 28px;
   cursor: pointer;
-  color: #777;
-  padding: 0 4px;
+  color: #4c6f89;
+  padding: 10px;
+  transition: transform 0.3s ease;
+  border-radius: 50%;
+  background: #ffffff;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+
+  &:hover {
+    transform: scale(1.1);
+    background: #d0e1f9;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
 }
 
+/* 🔹 지역 선택 아이템 - 아이콘 + 이름 */
 .scroll-wrapper {
   display: flex;
-  gap: 22px;
+  gap: 8px;
   overflow-x: auto;
   scroll-behavior: smooth;
   padding: 6px;
@@ -267,28 +263,61 @@ onMounted(() => {
 
 .area-item {
   flex-shrink: 0;
-  width: 82px;
   text-align: center;
   cursor: pointer;
   transition: 0.25s;
-
-  img {
-    width: 72px;
-    height: 72px;
-    border-radius: 999px;
-    background: #eceff5;
-  }
-
-  span {
-    display: block;
-    margin-top: 6px;
-    font-size: 15px;
-  }
+  padding: 6px;
+  width: 110px; /* 너비 확장 */
+  background-color: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
 }
 
+/* 아이템 hover 효과 */
+.area-item:hover {
+  transform: scale(1.1);
+  background: #eef4ff;
+}
+
+/* 활성화된 상태 */
 .area-item.active {
-  transform: scale(1.08);
   font-weight: 700;
+  border: 2px solid #3d81ff;
+  background-color: #d7e8ff;
+}
+
+/* 아이콘 크기 조정 */
+.area-item img {
+  width: 80px; /* 아이콘 크기 확장 */
+  height: 80px; /* 아이콘 크기 확장 */
+  border-radius: 50%;
+  background: #eceff5;
+  margin-bottom: 10px;
+}
+
+/* 텍스트 스타일 */
+.area-item span {
+  font-size: 14px;
+  color: #333;
+}
+
+/* 🔹 스크롤바 숨기기 */
+.scroll-wrapper {
+  display: flex;
+  gap: 20px;
+  overflow-x: auto;
+  scroll-behavior: smooth;
+  padding: 6px;
+  -ms-overflow-style: none; /* Internet Explorer 10+ */
+  scrollbar-width: none; /* Firefox */
+}
+
+.scroll-wrapper::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
 }
 
 /* 🔹 제목 + 카테고리 */
@@ -301,11 +330,6 @@ onMounted(() => {
   position: relative;
 }
 
-.title-row h2 {
-  font-size: 26px;
-  font-weight: 700;
-}
-
 .title-left {
   display: flex;
   align-items: center;
@@ -315,17 +339,30 @@ onMounted(() => {
 .title-left h2 {
   font-size: 26px;
   font-weight: 700;
+  color: #333;
+  margin: 0;
 }
 
-.title-right {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-
+/* 전체(선택 지역) 스타일 개선 */
+.title-left .selected-area {
+  background: #eef4ff;
+  padding: 8px 16px;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 600;
+  color: #3d81ff;
+  cursor: pointer;
+  transition: 0.3s ease;
 }
 
+.title-left .selected-area:hover {
+  background: #d7e8ff;
+  transform: scale(1.05);
+}
+
+/* 🔹 여행지 드롭다운 */
 .category-box {
-  padding: 8px 14px;
+  padding: 10px 14px;
   border: 2px solid #bcd0ff;
   border-radius: 10px;
   cursor: pointer;
@@ -334,40 +371,64 @@ onMounted(() => {
   display: flex;
   align-items: center;
   gap: 6px;
-
-  .arrow {
-    font-size: 15px;
-    margin-top: 1px;
-    transition: 0.2s;
-  }
-
-  .arrow.open {
-    transform: rotate(180deg);
-  }
+  position: relative;
+  width: max-content;
 }
 
-/* 🔹 드롭다운 */
+/* 드롭다운 아이콘 회전 효과 */
+.category-box .arrow {
+  font-size: 16px;
+  transition: transform 0.3s ease; /* 부드러운 회전 */
+}
+
+.category-box .arrow.open {
+  transform: rotate(180deg);
+}
+
 .dropdown {
   position: absolute;
   top: 50px;
-  left: 96px;
+  left: 0;
   width: 160px;
-  background: white;
+  background: #fff;
   border: 1px solid #d7d7d7;
   border-radius: 6px;
-  z-index: 20;
+  z-index: 1000;
   list-style: none;
   padding: 6px 0;
   margin: 0;
 
-  li {
-    padding: 10px 12px;
-    cursor: pointer;
-    font-size: 16px;
+  /* 애니메이션용 */
+  opacity: 0;
+  transform: translateY(-8px);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
 
-    &:hover {
-      background: #eef4ff;
-    }
+.dropdown[style*="display: block"] {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.dropdown li {
+  padding: 10px 12px;
+  cursor: pointer;
+  font-size: 16px;
+  transition: background 0.3s ease;
+}
+
+.dropdown li:hover {
+  background: #eef4ff; /* 호버 시 배경색 변경 */
+}
+
+/* 드롭다운 열릴 때 애니메이션 */
+@keyframes dropdown-slide {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 
@@ -405,16 +466,16 @@ onMounted(() => {
   padding: 14px;
   cursor: pointer;
   transition: 0.25s;
+}
 
-  &:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
-  }
+.card:hover {
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+  transform: scale(1.02);
 }
 
 .thumbnail {
   width: 100%;
-  height: 140px;
+  height: 180px;
   border-radius: 10px;
   background: #d9e3f5;
   margin-bottom: 12px;
@@ -458,6 +519,15 @@ onMounted(() => {
     font-size: 16px;
     font-weight: 600;
   }
+}
+
+.pagination button.active {
+  background-color: #3d81ff;
+  color: white;
+}
+
+.pagination button:hover {
+  background-color: #eef4ff;
 }
 
 /* 🔍 아이콘 버튼 */
@@ -510,5 +580,4 @@ onMounted(() => {
   opacity: 0;
   transform: translateX(16px);
 }
-
 </style>
