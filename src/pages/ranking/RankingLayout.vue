@@ -1,7 +1,5 @@
 <template>
   <div class="ranking-layout">
-    <h1 class="page-title">사용자 랭킹</h1>
-
     <!-- 랭킹 탭 -->
     <div class="ranking-tabs">
       <RouterLink to="/ranking/review" class="tab" :class="{ active: isActive('/ranking/review') }">
@@ -14,7 +12,9 @@
     </div>
 
     <!-- 하위 페이지 -->
-    <RouterView />
+    <div class="ranking-content">
+      <RouterView />
+    </div>
   </div>
 </template>
 
@@ -22,40 +22,82 @@
 import { useRoute } from "vue-router";
 
 const route = useRoute();
-
 const isActive = (path) => route.path === path;
 </script>
 
 <style scoped>
+/* =========================
+   LAYOUT
+========================= */
 .ranking-layout {
   max-width: 900px;
   margin: 0 auto;
-  padding: 40px 20px;
+
+  /* 상단은 네비바 + 카드 여백에 맞추고,
+     하단은 과도한 흰 여백 방지 */
+  padding: 24px 20px 32px;
 }
 
-.page-title {
-  font-size: 26px;
-  font-weight: 700;
-  margin-bottom: 24px;
+.ranking-content {
+  width: 100%;
 }
 
+/* =========================
+   TABS (세그먼트 스타일)
+========================= */
 .ranking-tabs {
-  display: flex;
-  gap: 12px;
+  display: inline-flex;
+  gap: 6px;
+  padding: 6px;
   margin-bottom: 32px;
+
+  background: #f1f3f5;
+  border-radius: 999px;
 }
 
+/* 개별 탭 */
 .tab {
-  padding: 8px 18px;
-  border-radius: 20px;
-  background-color: #f1f3f5;
-  color: #333;
-  text-decoration: none;
+  position: relative;
+  padding: 8px 20px;
+  border-radius: 999px;
+
   font-size: 14px;
+  font-weight: 600;
+  color: #555;
+  text-decoration: none;
+
+  transition: background 0.2s ease, color 0.2s ease;
 }
 
+/* hover */
+.tab:hover {
+  background: rgba(37, 99, 235, 0.08);
+  color: #2563eb;
+}
+
+/* 활성 탭 */
 .tab.active {
-  background-color: #2563eb;
-  color: white;
+  background: #2563eb;
+  color: #fff;
+  box-shadow: 0 4px 10px rgba(37, 99, 235, 0.35);
+}
+
+/* =========================
+   RESPONSIVE
+========================= */
+@media (max-width: 768px) {
+  .ranking-layout {
+    padding: 20px 14px 28px;
+  }
+
+  .ranking-tabs {
+    gap: 4px;
+    padding: 4px;
+  }
+
+  .tab {
+    padding: 7px 14px;
+    font-size: 13px;
+  }
 }
 </style>

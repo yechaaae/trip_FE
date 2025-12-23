@@ -112,6 +112,7 @@ const logout = async () => {
   }
 };
 </script>
+
 <style lang="scss" scoped>
 /* =========================
    NAVBAR (Floating 유지)
@@ -160,7 +161,7 @@ const logout = async () => {
 /* LEFT */
 .left {
   position: absolute;
-  left: 0;
+  left: 15px;
   top: 50%;
   transform: translateY(-50%);
 }
@@ -178,7 +179,7 @@ const logout = async () => {
 /* RIGHT */
 .right {
   position: absolute;
-  right: 0;
+  right: 12px;
   top: 50%;
   transform: translateY(-50%);
   display: flex;
@@ -190,7 +191,7 @@ const logout = async () => {
    LOGO
 ========================= */
 .logo img {
-  height: 68px;
+  height: 80px;
   transition: transform 0.25s ease, filter 0.25s ease;
 }
 

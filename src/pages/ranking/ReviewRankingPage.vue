@@ -22,14 +22,23 @@ const fetchRankingData = async () => {
     const response = await axios.get("http://localhost:8080/api/ranking/reviews");
     const rankingList = response.data;
 
-    top3.value = rankingList.slice(0, 3); // 상위 3명
-    restList.value = rankingList.slice(3); // 나머지
+    top3.value = rankingList.slice(0, 3);
+    restList.value = rankingList.slice(3);
   } catch (error) {
     console.error("리뷰 랭킹 데이터 로딩 실패:", error);
   }
 };
 
-onMounted(() => {
-  fetchRankingData(); // 페이지가 로드되면 데이터를 불러옵니다.
-});
+onMounted(fetchRankingData);
 </script>
+
+<style scoped>
+.ranking-page {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+
+  /* ⭐ 컨텐츠 적을 때 바닥 여백 방지 */
+  min-height: calc(100vh - 220px);
+}
+</style>

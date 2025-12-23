@@ -1,15 +1,17 @@
 <template>
   <div class="ranking-table">
+    <!-- 헤더 -->
     <div class="ranking-header">
       <span>순위</span>
       <span>사용자</span>
-      <span>{{ valueLabel }}</span>
+      <span class="value-col">{{ valueLabel }}</span>
     </div>
 
+    <!-- 랭킹 리스트 -->
     <div v-for="(user, index) in list" :key="user.nickname" class="ranking-row">
       <span class="rank">{{ startRank + index }}</span>
 
-      <!-- UserHoverCard 추가 -->
+      <!-- UserHoverCard -->
       <UserHoverCard :user="user" />
 
       <span class="count">{{ user.value }}</span>
@@ -18,11 +20,9 @@
 </template>
 
 <script setup>
-import { ref } from "vue";
-import UserHoverCard from "@/components/user/UserHoverCard.vue"; // 경로 확인
+import UserHoverCard from "@/components/user/UserHoverCard.vue";
 
-// props for receiving data from parent component
-const props = defineProps({
+defineProps({
   list: Array,
   valueLabel: String,
   startRank: Number,
@@ -30,39 +30,91 @@ const props = defineProps({
 </script>
 
 <style scoped>
+/* =========================
+   TABLE WRAPPER
+========================= */
 .ranking-table {
-  margin-top: 40px;
+  margin-top: 12px;
 }
 
-.ranking-header,
+/* =========================
+   HEADER
+========================= */
+.ranking-header {
+  display: grid;
+  grid-template-columns: 80px 1fr 120px;
+  padding: 12px 18px;
+  align-items: center;
+
+  font-size: 13px;
+  font-weight: 600;
+  color: #64748b;
+
+  border-bottom: 1px solid #e5e7eb;
+}
+
+/* =========================
+   ROW
+========================= */
 .ranking-row {
   display: grid;
   grid-template-columns: 80px 1fr 120px;
-  padding: 14px 16px;
+  padding: 16px 18px;
   align-items: center;
+
+  background: #ffffff;
+  border-radius: 14px;
+  margin-top: 10px;
+
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 
-.ranking-header {
-  font-weight: 600;
-  background-color: #f8f9fa;
-  border-bottom: 2px solid #ddd;
+.ranking-row:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
 }
 
-.ranking-row {
-  border-bottom: 1px solid #eee;
-}
-
+/* =========================
+   RANK
+========================= */
 .rank {
   font-size: 18px;
   font-weight: 700;
+  color: #2563eb;
 }
 
-.nickname {
-  font-weight: 500;
-}
-
+/* =========================
+   VALUE
+========================= */
 .count {
   text-align: right;
-  font-weight: 600;
+  font-weight: 700;
+  font-size: 15px;
+  color: #334155;
+}
+
+/* 헤더 value 정렬 */
+.value-col {
+  text-align: right;
+}
+
+/* =========================
+   MOBILE
+========================= */
+@media (max-width: 768px) {
+  .ranking-header,
+  .ranking-row {
+    grid-template-columns: 56px 1fr 80px;
+    padding: 14px;
+  }
+
+  .rank {
+    font-size: 16px;
+  }
+
+  .count {
+    font-size: 14px;
+  }
 }
 </style>
