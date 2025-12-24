@@ -30,6 +30,27 @@
       <div class="img-count">{{ images.length }}장</div>
     </section>
 
+    <!-- BASIC INFO -->
+    <section class="info-section">
+      <h2>기본 정보</h2>
+
+      <div class="info-item">
+        <span class="label">주소</span>
+        <p class="value">{{ place.addr1 }}</p>
+      </div>
+
+      <div class="info-item" v-if="place.tel">
+        <span class="label">전화</span>
+        <p class="value">{{ place.tel }}</p>
+      </div>
+
+      <!-- 홈페이지가 있을 때 링크로 표시 -->
+      <div class="info-item" v-if="place.homepage">
+        <span class="label">홈페이지</span>
+        <p class="value" v-html="place.homepage"></p>
+      </div>
+    </section>
+
     <!-- ACTION BAR -->
     <section class="action-bar">
       <div class="action-col">
@@ -55,26 +76,6 @@
           <img :src="shareIcon" />
           <span>공유</span>
         </div>
-      </div>
-    </section>
-
-    <!-- BASIC INFO -->
-    <section class="info-section">
-      <h2>기본 정보</h2>
-
-      <div class="info-item">
-        <span class="label">주소</span>
-        <p class="value">{{ place.addr1 }}</p>
-      </div>
-
-      <div class="info-item" v-if="place.tel">
-        <span class="label">전화</span>
-        <p class="value">{{ place.tel }}</p>
-      </div>
-
-      <div class="info-item" v-if="place.homepage">
-        <span class="label">홈페이지</span>
-        <p class="value" v-html="place.homepage"></p>
       </div>
     </section>
 
@@ -598,20 +599,22 @@ onMounted(async () => {
 /* INFO */
 .info-item {
   display: flex;
-  gap: 12px;
+  flex-direction: column;
+  gap: 6px;
   margin-bottom: 14px;
+  padding-left: 10px;
 }
 
 .label {
-  width: 64px;
-  font-size: 13px;
+  font-size: 15px;
   font-weight: 600;
-  color: #8a8f9c;
+  color: #333;
 }
 
 .value {
   font-size: 14px;
-  color: #333;
+  color: #666;
+  padding-left: 15px;
 }
 
 .value a {
@@ -630,11 +633,15 @@ onMounted(async () => {
   border-radius: 14px;
 }
 
-/* OVERVIEW */
+/* OVERVIEW - 가독성 개선 */
 .overview-section p {
-  line-height: 1.8;
-  font-size: 15px;
-  color: #444;
+  font-size: 16px; /* 글자 크기 ↑ */
+  line-height: 1.9; /* 줄간격 ↑ */
+  letter-spacing: -0.01em; /* 자간 미세 조정 */
+  color: #2f3438; /* 살짝 더 진한 본문 색 */
+  margin-top: 12px;
+  padding: 0 4px; /* 좌우 여백 살짝 */
+  word-break: keep-all; /* 한글 줄바꿈 안정 */
 }
 
 /* REVIEWS */
@@ -643,8 +650,7 @@ onMounted(async () => {
   justify-content: space-between;
   align-items: center;
   cursor: pointer;
-  padding-bottom: 12px;
-  margin-bottom: 16px;
+  padding-bottom: 5px;
   border-bottom: 1px solid #eef0f5;
 
   .left {
@@ -673,7 +679,7 @@ onMounted(async () => {
 }
 
 .reviews-body {
-  padding-top: 12px;
+  padding-top: 20px;
 }
 
 .sort {
