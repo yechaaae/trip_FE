@@ -1,7 +1,14 @@
 <template>
   <div class="write-container">
-    <h1>{{ isReview ? "리뷰 작성" : "자유글 작성" }}</h1>
+    <!-- HEADER -->
+    <section class="header-section">
+      <div class="header-top">
+        <button class="back-btn" @click="goBack">← 돌아가기</button>
+      </div>
+      <h1>{{ isReview ? "리뷰 작성" : "자유글 작성" }}</h1>
+    </section>
 
+    <!-- 작성 폼 -->
     <form class="form" @submit.prevent="submitReview">
       <label>{{ isReview ? "관광지 (제목)" : "제목" }}</label>
 
@@ -81,6 +88,15 @@ import StarRating from "@/components/StarRating.vue";
 
 const router = useRouter();
 const route = useRoute();
+
+//return btn
+const goBack = () => {
+  if (window.history.length > 1) {
+    router.back();
+  } else {
+    router.push("/board");
+  }
+};
 
 /* ======================
    MODE / TYPE
@@ -321,6 +337,25 @@ const submitReview = async () => {
     text-align: center;
     margin-bottom: 26px;
   }
+}
+
+.header-top {
+  margin-bottom: 12px;
+}
+
+.back-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: 13px; /* 텍스트 크기 줄이기 */
+  font-weight: 500; /* 텍스트 굵기 */
+  color: #8a8f9c; /* 회색톤 */
+  cursor: pointer;
+}
+
+.back-btn:hover {
+  color: #2b7cff; /* hover 시 파란색 */
+  text-decoration: underline; /* 밑줄 */
 }
 
 .form {

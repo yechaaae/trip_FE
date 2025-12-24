@@ -1,56 +1,62 @@
 <template>
   <div class="detail-container">
-    <article class="detail-card">
-      <!-- 제목 -->
-      <h1 class="detail-title">{{ post.title }}</h1>
-
-      <!-- 평점 -->
-      <div v-if="post.rating" class="rating">⭐ {{ post.rating }} / 5.0</div>
-
-      <!-- 이미지 -->
-      <img v-if="post.saveFile" :src="`http://localhost:8080/upload/${post.saveFile}`" class="detail-img" />
-
-      <!-- 본문 -->
-      <div class="detail-content">
-        {{ post.content }}
+    <!-- HEADER -->
+    <section class="header-section">
+      <div class="header-top">
+        <button class="back-btn" @click="goBack">← 돌아가기</button>
       </div>
+      <article class="detail-card">
+        <!-- 제목 -->
+        <h1 class="detail-title">{{ post.title }}</h1>
 
-      <!-- 액션 + 메타 -->
-      <div class="detail-footer">
-        <!-- 좌측: 좋아요 / 댓글 / 조회수 -->
-        <div class="actions">
-          <button class="like-btn" :class="{ liked: post.userLiked }" @click="toggleLike">
-            {{ post.userLiked ? "❤️" : "🤍" }} {{ post.likeCount }}
-          </button>
+        <!-- 평점 -->
+        <div v-if="post.rating" class="rating">⭐ {{ post.rating }} / 5.0</div>
 
-          <button class="comment-btn">💬 {{ post.commentCount || 0 }}</button>
+        <!-- 이미지 -->
+        <img v-if="post.saveFile" :src="`http://localhost:8080/upload/${post.saveFile}`" class="detail-img" />
 
-          <span class="views">👀 {{ post.hit }}</span>
+        <!-- 본문 -->
+        <div class="detail-content">
+          {{ post.content }}
         </div>
 
-        <!-- 우측: 수정/삭제 + 작성자/날짜 -->
-        <div class="meta-area">
-          <!-- 작성자 전용 버튼 (⬆ 위로 이동) -->
-          <div class="owner-actions" v-if="userInfo && userInfo.userId === post.userId">
-            <button class="owner-btn edit" @click="goModify">수정</button>
-            <button class="owner-btn delete" @click="deleteArticle">삭제</button>
+        <!-- 액션 + 메타 -->
+        <div class="detail-footer">
+          <!-- 좌측: 좋아요 / 댓글 / 조회수 -->
+          <div class="actions">
+            <button class="like-btn" :class="{ liked: post.userLiked }" @click="toggleLike">
+              {{ post.userLiked ? "❤️" : "🤍" }} {{ post.likeCount }}
+            </button>
+
+            <button class="comment-btn">💬 {{ post.commentCount || 0 }}</button>
+
+            <span class="views">👀 {{ post.hit }}</span>
           </div>
 
-          <!-- 메타 정보 -->
-          <div class="meta">
-            <span class="writer" @click="goToProfile(post.userId)">
-              {{ post.nickName }}
-            </span>
-            · {{ post.registDate }}
+          <!-- 우측: 수정/삭제 + 작성자/날짜 -->
+          <div class="meta-area">
+            <!-- 작성자 전용 버튼 (⬆ 위로 이동) -->
+            <div class="owner-actions" v-if="userInfo && userInfo.userId === post.userId">
+              <button class="owner-btn edit" @click="goModify">수정</button>
+              <button class="owner-btn delete" @click="deleteArticle">삭제</button>
+            </div>
+
+            <!-- 메타 정보 -->
+            <div class="meta">
+              <span class="writer" @click="goToProfile(post.userId)">
+                {{ post.nickName }}
+              </span>
+              · {{ post.registDate }}
+            </div>
           </div>
         </div>
-      </div>
 
-      <!-- 댓글 영역 -->
-      <div class="comment-section">
-        <CommentList :boardId="postId" :userInfo="userInfo" @comment-change="fetchPostDetail(false)" />
-      </div>
-    </article>
+        <!-- 댓글 영역 -->
+        <div class="comment-section">
+          <CommentList :boardId="postId" :userInfo="userInfo" @comment-change="fetchPostDetail(false)" />
+        </div>
+      </article>
+    </section>
   </div>
 </template>
 
@@ -162,9 +168,38 @@ const goToProfile = (userId) => {
   // router/index.js에 { path: '/user/:userId', component: MyPage } 설정 추천
   router.push(`/user/${userId}`);
 };
+
+// 돌아가기 함수
+const goBack = () => {
+  if (window.history.length > 1) {
+    router.back();
+  } else {
+    router.push("/board"); // 게시판으로 이동
+  }
+};
 </script>
 
 <style scoped>
+/* HEADER TOP */
+.header-top {
+  margin-bottom: 12px;
+}
+
+.back-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: 13px; /* 텍스트 크기 줄이기 */
+  font-weight: 500; /* 텍스트 굵기 */
+  color: #8a8f9c; /* 회색톤 */
+  cursor: pointer;
+}
+
+.back-btn:hover {
+  color: #2b7cff; /* hover 시 파란색 */
+  text-decoration: underline; /* 밑줄 */
+}
+
 /* ===============================
    레이아웃
 ================================ */

@@ -2,7 +2,12 @@
   <div class="detail-page" v-if="place">
     <!-- HEADER -->
     <section class="header-section">
+      <div class="header-top">
+        <button class="back-btn" @click="goBack">← 돌아가기</button>
+      </div>
+
       <h1>{{ place.title }}</h1>
+
       <div class="meta">
         <span class="badge rating">⭐ {{ reviewStats.avgRating.toFixed(1) }}</span>
         <span class="badge review">리뷰 {{ reviewStats.reviewCount }}</span>
@@ -196,6 +201,19 @@ const reviewStats = ref({
   avgRating: 0,
   reviewCount: 0,
 });
+
+/* ======================
+   NAVIGATION
+====================== */
+const goBack = () => {
+  // 히스토리가 있으면 뒤로
+  if (window.history.length > 1) {
+    router.back();
+  } else {
+    // 직접 진입한 경우 대비 (fallback)
+    router.push("/area");
+  }
+};
 
 /* ======================
    FETCH DATA
@@ -482,6 +500,18 @@ onMounted(async () => {
     background: #eef4ff;
     color: #2b7cff;
   }
+}
+
+.back-btn {
+  font-size: 14px;
+  color: #8a8f9c;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.back-btn:hover {
+  color: #2b7cff;
 }
 
 /* IMAGE */

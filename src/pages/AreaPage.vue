@@ -40,34 +40,26 @@
           </div>
         </div>
 
-        <!-- ➡ 오른쪽: 검색 (A안: 아이콘 → 펼쳐짐) -->
+        <!-- ➡ 오른쪽: 검색 (아이콘 버튼) -->
         <div class="title-right">
           <!-- 🔍 아이콘 버튼 -->
           <button v-if="!searchOpen" class="search-icon-btn" @click="openSearch">
-            <i class="fa-solid fa-magnifying-glass"></i>
+            <img src="@/assets/icons/search-icon.png" alt="search icon" />
           </button>
 
           <!-- 🔍 펼쳐지는 검색창 -->
-          <transition name="search-slide">
-            <div v-if="searchOpen" class="search-box">
-              <input
-                ref="searchInput"
-                type="text"
-                v-model="searchQuery"
-                placeholder="관광지 검색"
-                @keyup.enter="onSearch"
-                @blur="closeSearch"
-              />
-              <button @click="onSearch">검색</button>
-            </div>
-          </transition>
+          <div v-show="searchOpen" class="search-box">
+            <input
+              ref="searchInput"
+              type="text"
+              v-model="searchQuery"
+              placeholder="관광지 검색"
+              @keyup.enter="onSearch"
+              @blur="closeSearch"
+            />
+            <button @click="onSearch">검색</button>
+          </div>
         </div>
-      </div>
-
-      <!-- 🔹 추천 -->
-      <div class="recommend-box">
-        <span class="tag">추천</span>
-        {{ selectedArea.name }} 인기 {{ selectedCategory.label }} 보기 →
       </div>
 
       <!-- 🔹 카드 목록 -->
@@ -180,7 +172,7 @@ const selectArea = (area) => {
 // 🔍 아이콘 클릭 → 검색창 열기 + 포커스
 const openSearch = async () => {
   searchOpen.value = true;
-  await nextTick();
+  await nextTick(); // 검색창 열릴 때 바로 포커스를 잡기 위해
   searchInput.value?.focus();
 };
 
@@ -433,12 +425,22 @@ onMounted(() => {
   color: #3d81ff;
   font-size: 16px;
   cursor: pointer;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.search-icon-btn img {
+  width: 24px; /* 아이콘 크기 설정 */
+  height: 24px;
 }
 
 .search-box {
   display: flex;
   align-items: center;
   gap: 6px;
+  transition: transform 0.25s ease; /* 애니메이션 성능 향상 */
 
   input {
     width: 220px;
