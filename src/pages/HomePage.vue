@@ -172,7 +172,49 @@ const getImageUrl = (path) => {
   /* 🔥 맵 영역 구분감 */
   box-shadow: inset 0 0 0 1px #eef1f5;
 }
+.badge-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
 
+.badge-circle {
+  width: 60px; /* 뱃지 크기 조절: 적절한 크기로 설정 */
+  height: 60px;
+  border-radius: 50%;
+  background: #f8f9fa; /* 배경색 */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border: 1px solid #e9ecef;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+  transition: transform 0.2s ease;
+}
+
+.badge-circle:hover {
+  transform: translateY(-3px); /* 호버 시 살짝 올라가는 효과 */
+}
+
+.badge-circle img {
+  width: 100%; /* 컨테이너에 맞게 꽉 채움 */
+  height: 100%;
+  object-fit: cover; /* 이미지 비율 유지하며 채우기 */
+}
+
+.badge-item p {
+  font-size: 12px;
+  font-weight: 600;
+  color: #495057;
+  text-align: center;
+  margin: 0;
+  /* 글자가 너무 길면 말줄임표 처리 */
+  width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 /* ===================
    BADGE CARD
 =================== */
